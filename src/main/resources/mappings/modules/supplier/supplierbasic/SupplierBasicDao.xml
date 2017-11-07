@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.supplier.dao.supplierbasic.SupplierBasicDao">
+    
+	<sql id="supplierBasicColumns">
+		a.id AS "id",
+		a.fname AS "fname",
+		a.ffullname AS "ffullname",
+		a.fbrief AS "fbrief",
+		a.fwebsite AS "fwebsite",
+		a.fbankid AS "fbankid",
+		a.fbank AS "fbank",
+		a.fbankaccoun AS "fbankaccoun",
+		a.fbankaccountname AS "fbankaccountname",
+		a.fbankaccountpersonid AS "fbankaccountpersonId",
+		a.fbankphone AS "fbankphone",
+		a.faddress AS "faddress",
+		a.fbdid AS "fbdid",
+		a.freminder AS "freminder",
+		a.femail AS "femail",
+		a.fsort AS "fsort",
+		a.ffax AS "ffax",
+		a.fdiscount AS "fdiscount",
+		a.fdebt AS "fdebt",
+		a.flinkman AS "flinkman",
+		a.fcellphone AS "fcellphone",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.fstatus AS "fstatus",
+		a.company_id AS "fsponsor.id",
+		a.office_id AS "fstore.id",
+		fstore.name AS "fstore.name",
+		fsponsor.name AS "fsponsor.name"
+	</sql>
+	
+	<sql id="supplierBasicJoins">
+	LEFT JOIN sys_office fsponsor ON fsponsor.id = a.company_id
+	LEFT JOIN sys_office fstore ON fstore.id = a.office_id
+	LEFT JOIN sys_user createby ON createby.id = a.create_by
+	
+	</sql>
+	
+    
+	<select id="get" resultType="SupplierBasic" >
+		SELECT 
+			<include refid="supplierBasicColumns"/>
+		FROM supplier_basic a
+		<include refid="supplierBasicJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="SupplierBasic" >
+		SELECT 
+			<include refid="supplierBasicColumns"/>
+		FROM supplier_basic a
+		<include refid="supplierBasicJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname = #{fname}
+			</if>
+			<if test="flinkman != null and flinkman != ''">
+				AND a.flinkman = #{flinkman}
+			</if>
+			<if test="fcellphone != null and fcellphone != ''">
+				AND a.fcellphone = #{fcellphone}
+			</if>
+			<if test="fstatus != null and fstatus != ''">
+				AND a.fstatus = #{fstatus}
+			</if>
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="SupplierBasic" >
+		SELECT 
+			<include refid="supplierBasicColumns"/>
+		FROM supplier_basic a
+		<include refid="supplierBasicJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<!-- 数据范围过滤 
+			${sqlMap.dsf}-->
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO supplier_basic(
+			id,
+			fname,
+			ffullname,
+			fbrief,
+			fwebsite,
+			fbankid,
+			fbank,
+			fbankaccoun,
+			fbankaccountname,
+			fbankaccountpersonid,
+			fbankphone,
+			faddress,
+			fbdid,
+			freminder,
+			femail,
+			fsort,
+			ffax,
+			fdiscount,
+			fdebt,
+			flinkman,
+			fcellphone,
+			update_date,
+			update_by,
+			create_date,
+			create_by,
+			remarks,
+			del_flag,
+			fstatus,
+			company_id,
+			office_id
+		) VALUES (
+			#{id},
+			#{fname},
+			#{ffullname},
+			#{fbrief},
+			#{fwebsite},
+			#{fbankid},
+			#{fbank},
+			#{fbankaccoun},
+			#{fbankaccountname},
+			#{fbankaccountpersonId},
+			#{fbankphone},
+			#{faddress},
+			#{fbdid},
+			#{freminder},
+			#{femail},
+			#{fsort},
+			#{ffax},
+			#{fdiscount},
+			#{fdebt},
+			#{flinkman},
+			#{fcellphone},
+			#{updateDate},
+			#{updateBy.id},
+			#{createDate},
+			#{createBy.id},
+			#{remarks},
+			#{delFlag},
+			#{fstatus},
+			#{fsponsor.id},
+			#{fstore.id}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE supplier_basic SET 	
+			fname = #{fname},
+			ffullname = #{ffullname},
+			fbrief = #{fbrief},
+			fwebsite = #{fwebsite},
+			fbankid = #{fbankid},
+			fbank = #{fbank},
+			fbankaccoun = #{fbankaccoun},
+			fbankaccountname = #{fbankaccountname},
+			fbankaccountpersonid = #{fbankaccountpersonId},
+			fbankphone = #{fbankphone},
+			faddress = #{faddress},
+			fbdid = #{fbdid},
+			freminder = #{freminder},
+			femail = #{femail},
+			fsort = #{fsort},
+			ffax = #{ffax},
+			fdiscount = #{fdiscount},
+			fdebt = #{fdebt},
+			flinkman = #{flinkman},
+			fcellphone = #{fcellphone},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remarks = #{remarks},
+			fstatus = #{fstatus},
+			company_id = #{fsponsor.id},
+			office_id = #{fstore.id}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM supplier_basic
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE supplier_basic SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="SupplierBasic" statementType="STATEMENT">
+		select * FROM supplier_basic  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

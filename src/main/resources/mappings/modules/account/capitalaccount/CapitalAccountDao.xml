@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.account.dao.capitalaccount.CapitalAccountDao">
+    
+	<sql id="capitalAccountColumns">
+		a.id AS "id",
+		a.foddnumbers AS "foddNumbers",
+		a.fbusinesshours AS "fbusinessHours",
+		a.faccounttype AS "accountType.id",
+		a.fclearingaccount AS "clearingAccount.id",
+		a.ftrader AS "ftrader.id",
+		a.fincome AS "fincome",
+		a.fexpenditure AS "fexpenditure",
+		a.fprofit AS "fprofit",
+		a.faccountbalance AS "faccountBalance",
+		a.finitialamount AS "finitialamount",
+		a.fexpenditureflag AS "fexpenditureflag",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.company_id AS "fsponsor.id",
+		a.office_id AS "fstore.id",
+		fsponsor.name AS "fsponsor.name",
+		fstore.name AS "fstore.name",
+		ftrader.login_name AS "ftrader.loginName",
+		accountType.ftypename AS "accountType.ftypename",
+		clearingAccount.faccountname AS "clearingAccount.faccountname"
+	</sql>
+	
+	<sql id="capitalAccountJoins">
+		LEFT JOIN fd_account_type accountType ON accountType.id = a.faccounttype
+		LEFT JOIN fd_clearing_account clearingAccount ON clearingAccount.id = a.fclearingaccount
+		LEFT JOIN sys_office fsponsor ON fsponsor.id = a.company_id
+		LEFT JOIN sys_office fstore ON fstore.id = a.office_id
+		LEFT JOIN sys_user ftrader ON ftrader.id = a.ftrader
+	</sql>
+	
+    
+	<select id="get" resultType="CapitalAccount" >
+		SELECT 
+			<include refid="capitalAccountColumns"/>
+		FROM fd_capital_account a
+		<include refid="capitalAccountJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="CapitalAccount" >
+		SELECT 
+			<include refid="capitalAccountColumns"/>
+		FROM fd_capital_account a
+		<include refid="capitalAccountJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="foddNumbers != null and foddNumbers != ''">
+				AND a.foddnumbers = #{foddNumbers}
+			</if>
+			<if test="accountType != null and accountType.id != null and accountType.id != ''">
+				AND a.faccounttype = #{accountType.id}
+			</if>
+			<if test="clearingAccount != null and clearingAccount.id != null and clearingAccount.id != ''">
+				AND a.fclearingaccount = #{clearingAccount.id}
+			</if>
+			<if test="fexpenditureflag != null and fexpenditureflag != ''">
+				AND a.fexpenditureflag = #{fexpenditureflag}
+			</if>
+			<!-- 权限过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="CapitalAccount" >
+		SELECT 
+			<include refid="capitalAccountColumns"/>
+		FROM fd_capital_account a
+		<include refid="capitalAccountJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<!-- 权限过滤
+			${sqlMap.dsf} -->
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO fd_capital_account(
+			id,
+			foddnumbers,
+			fbusinesshours,
+			faccounttype,
+			fclearingaccount,
+			ftrader,
+			fincome,
+			fexpenditure,
+			fprofit,
+			faccountbalance,
+			finitialamount,
+			fexpenditureflag,
+			company_id,
+			office_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{foddNumbers},
+			#{fbusinessHours},
+			#{accountType.id},
+			#{clearingAccount.id},
+			#{ftrader.id},
+			#{fincome},
+			#{fexpenditure},
+			#{fprofit},
+			#{faccountBalance},
+			#{finitialamount},
+			#{fexpenditureflag},
+			#{fsponsor.id},
+			#{fstore.id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fd_capital_account SET 	
+			foddnumbers = #{foddNumbers},
+			fbusinesshours = #{fbusinessHours},
+			faccounttype = #{accountType.id},
+			fclearingaccount = #{clearingAccount.id},
+			ftrader = #{ftrader.id},
+			fincome = #{fincome},
+			fexpenditure = #{fexpenditure},
+			fprofit = #{fprofit},
+			faccountbalance = #{faccountBalance},
+			finitialamount = #{finitialamount},
+			fexpenditureflag = #{fexpenditureflag},
+			company_id = #{fsponsor.id},
+			office_id = #{fstore.id},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM fd_capital_account
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE fd_capital_account SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="CapitalAccount" statementType="STATEMENT">
+		select * FROM fd_capital_account  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListByaccountType" resultType="AccountType">
+		SELECT 
+			*
+		FROM fd_account_type a
+		<where>
+			a.delFlag = #{DEL_FLAG_NORMAL}
+			<if test="ftypename != null and ftypename != ''">
+				AND a.ftypename LIKE 
+				<if test="dbName == 'oracle'">#{ftypename}||'%'</if>
+				<if test="dbName == 'mssql'">#{ftypename}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{ftypename},'%')</if>
+			</if>
+			AND a.fstatus = 1
+			<!-- 权限过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.updateDate DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByclearingAccount" resultType="ClearingAccount">
+		SELECT 
+			*
+		FROM fd_clearing_account a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="faccountname != null and faccountname != ''">
+				AND a.faccountname LIKE 
+				<if test="dbName == 'oracle'">#{faccountname}||'%'</if>
+				<if test="dbName == 'mssql'">#{faccountname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{faccountname},'%')</if>
+			</if>
+			AND a.fstatus = 1
+			<!-- 权限过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.goods.dao.spu.GoodsSpuDao">
+    
+	<sql id="goodsSpuColumns">
+		a.id AS "id",
+		a.fgoodsname AS "fgoodsname",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.fbuyprice AS "fbuyprice",
+		a.funit_id AS "goodsUnit.id",
+		a.brand_id AS "brand.id",
+		a.fcategorys_id AS "categorys.id",
+		a.fimage1 AS "fimage1",
+		a.fimage2 AS "fimage2",
+		a.fpicture_id AS "fpictureId",
+		a.fonsalestime AS "fonsalestime",
+		a.foffsalestime AS "foffsalestime",
+		a.update_by AS "updateBy.id",
+		a.fstatus AS "fstatus",
+		a.fseason AS "fseason",
+		goodsUnit.funitname AS "goodsUnit.funitname",
+		brand.fbrandname AS "brand.fbrandname",
+		categorys.name AS "categorys.name",
+		c.name AS "company.name",
+    	c.parent_id AS "company.parent.id",
+    	c.parent_ids AS "company.parentIds",
+		o.name AS "office.name",
+    	o.parent_id AS "office.parent.id",
+    	o.parent_ids AS "office.parentIds"
+	</sql>
+	
+	<sql id="goodsSpuJoins">
+		LEFT JOIN  sys_office c ON c.id = a.company_id
+		LEFT JOIN  sys_office o ON o.id = a.office_id 
+		LEFT JOIN sys_user createby ON createby.id = a.create_by
+		LEFT JOIN goods_unit goodsUnit ON goodsUnit.id = a.funit_id
+		LEFT JOIN goods_brand brand ON brand.id = a.brand_id
+		LEFT JOIN goods_category categorys ON categorys.id = a.fcategorys_id
+	</sql>
+	
+    <resultMap type="GoodsSpu" id="GoodsSpuResult" autoMapping="true">
+    	<result column="fimage1" property="fimage1"   typeHandler="com.jeeplus.common.mapper.ConvertBlobTypeHandler"/>
+    	<result column="fimage2" property="fimage2"   typeHandler="com.jeeplus.common.mapper.ConvertBlobTypeHandler"/>
+    </resultMap>
+    
+	<select id="get" resultMap="GoodsSpuResult" >
+		SELECT 
+			<include refid="goodsSpuColumns"/>
+		FROM goods_spu a
+		<include refid="goodsSpuJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultMap="GoodsSpuResult" >
+		SELECT 
+			<include refid="goodsSpuColumns"/>
+		FROM goods_spu a
+		<include refid="goodsSpuJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fgoodsname != null and fgoodsname != ''">
+				AND a.fgoodsname LIKE 
+					<if test="dbName == 'oracle'">'%'||#{fgoodsname}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fgoodsname}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fgoodsname},'%')</if>
+			</if>
+			
+			<if test="goodsUnit != null and goodsUnit.id != null and goodsUnit.id != ''">
+				AND a.funit_id = #{goodsUnit.id}
+			</if>
+			<if test="brand != null and brand.id != null and brand.id != ''">
+				AND a.brand_id = #{brand.id}
+			</if>
+			<if test="categorys != null and categorys.id != null and categorys.id != ''">
+				AND a.fcategorys_id = #{categorys.id}
+			</if>
+			<if test="fstatus != null and fstatus != ''">
+				AND a.fstatus = #{fstatus}
+			</if>
+			
+			<if test="fseason != null and fseason != ''">
+				AND a.fseason = #{fseason}
+			</if>
+			
+			<!-- 数据范围过滤 -->
+				${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultMap="GoodsSpuResult" >
+		SELECT 
+			<include refid="goodsSpuColumns"/>
+		FROM goods_spu a
+		<include refid="goodsSpuJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO goods_spu(
+			id,
+			fgoodsname,
+			create_by,
+			create_date,
+			company_id,
+			update_date,
+			remarks,
+			del_flag,
+			fbuyprice,
+			funit_id,
+			brand_id,
+			fcategorys_id,
+			fimage1,
+			fimage2,
+			fpicture_id,
+			fonsalestime,
+			foffsalestime,
+			update_by,
+			fstatus,
+			fseason,
+			office_id
+		) VALUES (
+			#{id},
+			#{fgoodsname},
+			#{createBy.id},
+			#{createDate},
+			#{company.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{fbuyprice},
+			#{goodsUnit.id},
+			#{brand.id},
+			#{categorys.id},
+			#{fimage1},
+			#{fimage2},
+			#{fpictureId},
+			#{fonsalestime},
+			#{foffsalestime},
+			#{updateBy.id},
+			#{fstatus},
+			#{fseason},
+			#{office.id}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE goods_spu SET 	
+			fgoodsname = #{fgoodsname},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			fbuyprice = #{fbuyprice},
+			funit_id = #{goodsUnit.id},
+			brand_id = #{brand.id},
+			fcategorys_id = #{categorys.id},
+			fimage1 = #{fimage1},
+			fimage2 = #{fimage2},
+			fpicture_id = #{fpictureId},
+			fonsalestime = #{fonsalestime},
+			foffsalestime = #{foffsalestime},
+			update_by = #{updateBy.id},
+			fstatus = #{fstatus},
+			fseason = #{fseason}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM goods_spu
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE goods_spu SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="GoodsSpu" statementType="STATEMENT">
+		select * FROM goods_spu  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListBygoodsUnit" resultType="GoodsUnit">
+		SELECT 
+			*
+		FROM goods_unit a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and 
+			a.fstatus='1'
+			<if test="funitname != null and funitname != ''">
+				AND a.funitname LIKE 
+				<if test="dbName == 'oracle'">#{funitname}||'%'</if>
+				<if test="dbName == 'mssql'">#{funitname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{funitname},'%')</if>
+			</if>
+			<if test="fsponsorid and fsponsorid.id!='' and fsponsorid.id!=null">
+				And  a.fsponsorid=#{fsponsorid.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListBybrand" resultType="Brand">
+		SELECT 
+			*
+		FROM goods_brand a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and 
+			and  a.fstatus='1'
+			<if test="fbrandname != null and fbrandname != ''">
+				AND a.fbrandname LIKE 
+				<if test="dbName == 'oracle'">#{fbrandname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fbrandname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fbrandname},'%')</if>
+			</if>
+			<if test="fsponsorId!=null and fsponsorId.id!='' and fsponsorId.id!=null">
+				And  a.fsponsorid=#{fsponsorId.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListBycategorys" resultType="Categorys">
+		SELECT 
+			*
+		FROM goods_category a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			and  a.fstatus ='1'
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+				<if test="dbName == 'oracle'">#{name}||'%'</if>
+				<if test="dbName == 'mssql'">#{name}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{name},'%')</if>
+			</if>
+			
+			<if test="fsponsorId!=null  and fsponsorId.id!='' and fsponsorId.id!=null">
+				And  a.fsponsorid=#{fsponsorId.id}
+			</if>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

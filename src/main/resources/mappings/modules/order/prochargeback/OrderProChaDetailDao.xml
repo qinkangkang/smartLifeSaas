@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.order.dao.prochargeback.OrderProChaDetailDao">
+    
+	<sql id="orderProChaDetailColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.fspuid AS "fspu.id",
+		a.fskuid AS "fsku.id",
+		a.fgoodsnum AS "fgoodsnum",
+		a.fgoodsprice AS "fgoodsprice",
+		a.fdiscount AS "fdiscount",
+		a.fdiscountprice AS "fdiscountPrice",
+		a.fcountprice AS "fcountprice",
+		a.fdiscountcountprice AS "fdiscountcountprice",
+		a.fstatus AS "fstatus",
+		a.fprocurementid AS "fprocurement.id",
+		a.fprocurementchargebackid AS "fprocurementchargeback.id",
+		a.fwarehousegoodsinfoid AS "fwarehouseGoodsInfo.id",
+		fspu.fgoodsname AS "fspu.fgoodsname",
+		fsku.fgoodsnumber AS "fsku.fgoodsnumber",
+		fsku.fgoodsnumber AS "fsku.fgoodsnumber",
+		fsku.fcolor_id AS "fsku.color.id",
+		fsku.fsize_id AS "fsku.size.id",
+		fprocurement.fordernum AS "fprocurement.fordernum",
+		b.fordernum AS "fprocurementchargeback.fordernum",
+		<!--  -->
+		color.fcolorname AS "fsku.color.fcolorname",
+		size.fsizename AS "fsku.size.fsizename",
+		brand.fbrandname AS "fspu.brand.fbrandname",
+		unit.funitname AS "fspu.brand.funitname",
+		category.name AS "fspu.categorys.name"
+	</sql>
+	
+	<sql id="orderProChaDetailJoins">
+		LEFT JOIN order_procurement_chargeback b ON b.id = a.fprocurementchargebackid
+		LEFT JOIN goods_spu fspu ON fspu.id = a.fspuid
+		LEFT JOIN goods_sku fsku ON fsku.id = a.fskuid
+		LEFT JOIN order_procurement fprocurement ON fprocurement.id = a.fprocurementid
+		LEFT JOIN warehouse_goods_info fwarehouseGoodsInfo ON fwarehouseGoodsInfo.id = a.fwarehousegoodsinfoid
+		<!--  -->
+		LEFT JOIN goods_color color ON color.id = fsku.fcolor_id
+		LEFT JOIN goods_size size ON size.id = fsku.fsize_id
+		LEFT JOIN goods_brand brand ON brand.id = fspu.brand_id
+		LEFT JOIN goods_unit unit ON unit.id = fspu.brand_id
+		LEFT JOIN goods_category category ON category.id = fspu.fcategorys_id
+		LEFT JOIN sys_user createby ON createby.id = a.create_by
+	</sql>
+	
+    
+	<select id="get" resultType="OrderProChaDetail" >
+		SELECT 
+			<include refid="orderProChaDetailColumns"/>
+		FROM order_procurement_chargeback_detail a
+		<include refid="orderProChaDetailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="OrderProChaDetail" >
+		SELECT 
+			<include refid="orderProChaDetailColumns"/>
+		FROM order_procurement_chargeback_detail a
+		<include refid="orderProChaDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fprocurementchargeback != null and fprocurementchargeback.id != null and fprocurementchargeback.id != ''">
+				AND a.fprocurementchargebackid = #{fprocurementchargeback.id}
+			</if>
+			<if test="fstatus != null and fstatus > 0 ">
+				AND a.fstatus = #{fstatus}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="OrderProChaDetail" >
+		SELECT 
+			<include refid="orderProChaDetailColumns"/>
+		FROM order_procurement_chargeback_detail a
+		<include refid="orderProChaDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO order_procurement_chargeback_detail(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			fspuid,
+			fskuid,
+			fgoodsnum,
+			fgoodsprice,
+			fdiscount,
+			fdiscountprice,
+			fcountprice,
+			fdiscountcountprice,
+			fstatus,
+			fprocurementid,
+			fwarehousegoodsinfoid,
+			fprocurementchargebackid
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{fspu.id},
+			#{fsku.id},
+			#{fgoodsnum},
+			#{fgoodsprice},
+			#{fdiscount},
+			#{fdiscountPrice},
+			#{fcountprice},
+			#{fdiscountcountprice},
+			#{fstatus},
+			#{fprocurement.id},
+			#{fwarehouseGoodsInfo.id},
+			#{fprocurementchargeback.id}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE order_procurement_chargeback_detail SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			fspuid = #{fspu.id},
+			fskuid = #{fsku.id},
+			fgoodsnum = #{fgoodsnum},
+			fgoodsprice = #{fgoodsprice},
+			fdiscount = #{fdiscount},
+			fdiscountprice = #{fdiscountPrice},
+			fcountprice = #{fcountprice},
+			fdiscountcountprice = #{fdiscountcountprice},
+			fstatus = #{fstatus},
+			fprocurementid = #{fprocurement.id},
+			fwarehousegoodsinfoid=#{fwarehouseGoodsInfo.id},
+			fprocurementchargebackid = #{fprocurementchargeback.id}
+			
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM order_procurement_chargeback_detail
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE fprocurementchargebackid = #{fprocurementchargeback.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE order_procurement_chargeback_detail SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE fprocurementchargebackid = #{fprocurementchargeback.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="OrderProChaDetail" statementType="STATEMENT">
+		select * FROM order_procurement_chargeback_detail  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListByfspu" resultType="GoodsSpu">
+		SELECT 
+			*
+		FROM goods_spu a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fgoodsname != null and fgoodsname != ''">
+				AND a.fgoodsname LIKE 
+				<if test="dbName == 'oracle'">#{fgoodsname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fgoodsname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fgoodsname},'%')</if>
+			</if>
+			<!-- 数据范围过滤${sqlMap.dsf} -->
+			
+			AND a.fstatus ='1'
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByfsku" resultType="GoodsSku">
+		SELECT 
+			*
+		FROM goods_sku a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fgoodsnumber != null and fgoodsnumber != ''">
+				AND a.fgoodsnumber LIKE 
+				<if test="dbName == 'oracle'">#{fgoodsnumber}||'%'</if>
+				<if test="dbName == 'mssql'">#{fgoodsnumber}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fgoodsnumber},'%')</if>
+			</if>
+			<!-- 数据范围过滤${sqlMap.dsf} -->
+			
+			AND a.fstatus != '2' OR a.fstatus is null
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByfprocurement" resultType="OrderProcurement">
+		SELECT 
+			*
+		FROM order_procurement a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fordernum != null and fordernum != ''">
+				AND a.fordernum LIKE 
+				<if test="dbName == 'oracle'">#{fordernum}||'%'</if>
+				<if test="dbName == 'mssql'">#{fordernum}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fordernum},'%')</if>
+			</if>
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.report.dao.TransferReportDao">
+   
+    <sql id="warehouseTransferGoodsColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.ftransfernum AS "transferNum",
+		a.fgoods_spu AS "goodsSpu.id",
+		a.fgoods_sku AS "goodsSku.id",
+		a.fwarehouse_transferorder AS "transferOrder.id",
+		a.ftransferoutbeforenum AS "ftransferOutBeforeNum",
+		a.ftransferinbeforenum AS "ftransferInBeforeNum",
+		b.ftransfer_order AS "transferOrder.ftransferOrder",
+		b.fstatus AS "transferOrder.fstatus",
+		b.ftransfer_date AS "transferOrder.ftransferDate",
+		c.fname AS "transferOrder.warehouseOut.fname",
+		d.fname AS "transferOrder.fwarehouseIn.fname",
+		goodsSpu.fgoodsname AS "goodsSpu.fgoodsname",
+		goodsSpu.funit_id AS "goodsSpu.goodsUnit.id",
+		goodsSku.fgoodsnumber AS "goodsSku.fgoodsnumber",
+		goodsSku.fbarcode AS "goodsSku.fbarcode",
+		category.name AS "goodsSpu.categorys.name",
+		brand.fbrandname AS "goodsSpu.brand.fbrandname",
+		unit.funitname AS "goodsSpu.goodsUnit.funitname"
+	</sql>
+	
+	<sql id="warehouseTransferGoodsJoins">
+		LEFT JOIN warehouse_transferorder b  ON b.id = a.fwarehouse_transferorder
+		LEFT JOIN warehouse c ON c.id = b.fwarehouseout_by
+		LEFT JOIN warehouse d ON d.id = b.fwarehousein_by
+		LEFT JOIN goods_spu goodsSpu ON goodsSpu.id = a.fgoods_spu
+		LEFT JOIN goods_sku goodsSku ON goodsSku.id = a.fgoods_sku
+		LEFT JOIN goods_category category  ON category.id = goodsSpu.fcategorys_id
+		LEFT JOIN goods_brand brand ON brand.id = goodsSpu.brand_id
+		LEFT JOIN goods_unit unit ON unit.id = goodsSpu.funit_id
+		LEFT JOIN sys_user updatebyb ON updatebyb.id = b.update_by
+	</sql>
+	
+    
+	<select id="get" resultType="WarehouseTransferGoods" >
+		SELECT 
+			<include refid="warehouseTransferGoodsColumns"/>
+		FROM warehouse_transferorder_goods a
+		<include refid="warehouseTransferGoodsJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="WarehouseTransferGoods" >
+		SELECT 
+			<include refid="warehouseTransferGoodsColumns"/>
+		FROM warehouse_transferorder_goods a
+		<include refid="warehouseTransferGoodsJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="transferOrder != null and transferOrder.id != null and transferOrder.id != ''">
+				AND a.fwarehouse_transferorder = #{transferOrder.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="WarehouseTransferGoods" >
+		SELECT 
+			<include refid="warehouseTransferGoodsColumns"/>
+		FROM warehouse_transferorder_goods a
+		<include refid="warehouseTransferGoodsJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO warehouse_transferorder_goods(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			ftransfernum,
+			fgoods_spu,
+			fgoods_sku,
+			fwarehouse_transferorder,
+			ftransferoutbeforenum,
+			ftransferinbeforenum
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{transferNum},
+			#{goodsSpu.id},
+			#{goodsSku.id},
+			#{transferOrder.id},
+			#{ftransferOutBeforeNum},
+			#{ftransferInBeforeNum}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE warehouse_transferorder_goods SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			ftransfernum = #{transferNum},
+			fgoods_spu = #{goodsSpu.id},
+			fgoods_sku = #{goodsSku.id},
+			fwarehouse_transferorder = #{transferOrder.id},
+			ftransferoutbeforenum = #{ftransferOutBeforeNum},
+			ftransferinbeforenum = #{ftransferInBeforeNum}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM warehouse_transferorder_goods
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE fwarehouse_transferorder = #{transferOrder.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE warehouse_transferorder_goods SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE fwarehouse_transferorder = #{transferOrder.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="WarehouseTransferGoods" statementType="STATEMENT">
+		select * FROM warehouse_transferorder_goods  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListBygoodsSpu" resultType="GoodsSpu">
+		SELECT 
+			*
+		FROM goods_spu a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fgoodsname != null and fgoodsname != ''">
+				AND a.fgoodsname LIKE 
+				<if test="dbName == 'oracle'">#{fgoodsname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fgoodsname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fgoodsname},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListBygoodsSku" resultType="GoodsSku">
+		SELECT 
+			*
+		FROM goods_sku a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="goodsSpu.id != null and goodsSpu.id != ''">
+				AND a.fspuid = #{goodsSpu.id}
+			</if>
+			<if test="fgoodsnumber != null and fgoodsnumber != ''">
+				AND a.fgoodsnumber LIKE 
+				<if test="dbName == 'oracle'">#{fgoodsnumber}||'%'</if>
+				<if test="dbName == 'mssql'">#{fgoodsnumber}+'%'</if>
+				<if test="dbName == 'mysql'">concat('%',#{fgoodsnumber},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListBygoodsUnit" resultType="GoodsUnit">
+		SELECT 
+			*
+		FROM goods_unit a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="funitname != null and funitname != ''">
+				AND a.funitname LIKE 
+				<if test="dbName == 'oracle'">#{funitname}||'%'</if>
+				<if test="dbName == 'mssql'">#{funitname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{funitname},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListBytransferOrder" resultType="WarehouseTransferOrder">
+		SELECT 
+			*
+		FROM warehouse_transferorder a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="id != null and id != ''">
+				AND a.id LIKE 
+				<if test="dbName == 'oracle'">#{id}||'%'</if>
+				<if test="dbName == 'mssql'">#{id}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{id},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+</mapper>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.account.dao.accountmanagement.AccountTypeDao">
+    
+	<sql id="accountTypeColumns">
+		a.id AS "id",
+		a.ftypename AS "ftypename",
+		a.forder AS "forder",
+		a.createby AS "createBy.id",
+		a.createdate AS "createDate",
+		a.updateby AS "updateBy.id",
+		a.updatedate AS "updateDate",
+		a.remarks AS "remarks",
+		a.delflag AS "delFlag",
+		a.fstatus AS "fstatus",
+		a.company_id AS "fsponsor.id",
+		a.office_id AS "fstore.id",
+		fsponsor.name AS "fsponsor.name",
+		fstore.name AS "fstore.name",
+		createby.login_name AS "createby.loginName",
+		updateby.login_name AS "updateby.loginName"
+	</sql>
+	
+	<sql id="accountTypeJoins">
+	LEFT JOIN sys_office fsponsor ON fsponsor.id = a.company_id
+	LEFT JOIN sys_office fstore ON fstore.id = a.office_id
+	LEFT JOIN sys_user createby ON createby.id = a.createby
+	LEFT JOIN sys_user updateby ON updateby.id = a.updateby
+	</sql>
+	
+    
+	<select id="get" resultType="AccountType" >
+		SELECT 
+			<include refid="accountTypeColumns"/>
+		FROM fd_account_type a
+		<include refid="accountTypeJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="AccountType" >
+		SELECT 
+			<include refid="accountTypeColumns"/>
+		FROM fd_account_type a
+		<include refid="accountTypeJoins"/>
+		<where>
+			
+			<if test="ftypename != null and ftypename != ''">
+				AND a.ftypename LIKE 
+					<if test="dbName == 'oracle'">'%'||#{ftypename}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{ftypename}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{ftypename},'%')</if>
+			</if>
+			<if test="beginCreateDate != null and endCreateDate != null and beginCreateDate != '' and endCreateDate != ''">
+				AND a.createdate BETWEEN #{beginCreateDate} AND #{endCreateDate}
+			</if>
+			<if test="fstatus != null and fstatus != ''">
+				AND a.fstatus = #{fstatus}
+			</if>
+			<!-- 权限过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="AccountType" >
+		SELECT 
+			<include refid="accountTypeColumns"/>
+		FROM fd_account_type a
+		<include refid="accountTypeJoins"/>
+		<where>
+			a.delflag = #{DEL_FLAG_NORMAL}
+			<!-- 权限过滤 -->
+			${sqlMap.dsf}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO fd_account_type(
+			id,
+			ftypename,
+			forder,
+			createby,
+			createdate,
+			updateby,
+			updatedate,
+			remarks,
+			delflag,
+			fstatus,
+			company_id,
+			office_id
+		) VALUES (
+			#{id},
+			#{ftypename},
+			#{forder},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{fstatus},
+			#{fsponsor.id},
+			#{fstore.id}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fd_account_type SET 	
+			ftypename = #{ftypename},
+			forder = #{forder},
+			updateby = #{updateBy.id},
+			updatedate = #{updateDate},
+			remarks = #{remarks},
+			fstatus = #{fstatus},
+			company_id = #{fsponsor.id},
+			office_id = #{fstore.id}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM fd_account_type
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE fd_account_type SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="AccountType" statementType="STATEMENT">
+		select * FROM fd_account_type  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

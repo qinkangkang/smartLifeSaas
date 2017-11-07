@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.goods.dao.size.SizeDao">
+    
+	<sql id="sizeColumns">
+		a.id AS "id",
+		a.fsizename AS "fsizename",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.update_by AS "updateBy.id",
+		a.fsort AS "fsort",
+		a.fstatus AS "fstatus",
+		c.name AS "company.name",
+    	c.parent_id AS "company.parent.id",
+    	c.parent_ids AS "company.parentIds",
+		o.name AS "office.name",
+    	o.parent_id AS "office.parent.id",
+    	o.parent_ids AS "office.parentIds"
+	</sql>
+	
+	<sql id="sizeJoins">
+	 LEFT JOIN  sys_office c ON c.id = a.fsponsorid
+	 LEFT JOIN  sys_office o ON o.id = a.office_id 
+	 LEFT JOIN sys_user createby ON createby.id = a.create_by
+	</sql>
+	
+    
+	<select id="get" resultType="Size" >
+		SELECT 
+			<include refid="sizeColumns"/>
+		FROM goods_size a
+		<include refid="sizeJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="Size" >
+		SELECT 
+			<include refid="sizeColumns"/>
+		FROM goods_size a
+		<include refid="sizeJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fsizename != null and fsizename != ''">
+				AND a.fsizename = #{fsizename}
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks LIKE 
+					<if test="dbName == 'oracle'">'%'||#{remarks}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{remarks}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{remarks},'%')</if>
+			</if>
+			<if test="fstatus != null and fstatus != ''">
+				AND a.fstatus = #{fstatus}
+			</if>
+			<!-- 数据范围过滤 -->
+				${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Size" >
+		SELECT 
+			<include refid="sizeColumns"/>
+		FROM goods_size a
+		<include refid="sizeJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO goods_size(
+			id,
+			fsizename,
+			del_flag,
+			create_by,
+			create_date,
+			update_date,
+			fsponsorid,
+			remarks,
+			update_by,
+			fsort,
+			fstatus
+		) VALUES (
+			#{id},
+			#{fsizename},
+			#{delFlag},
+			#{createBy.id},
+			#{createDate},
+			#{updateDate},
+			#{fsponsorid.id},
+			#{remarks},
+			#{updateBy.id},
+			#{fsort},
+			#{fstatus}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE goods_size SET 	
+			fsizename = #{fsizename},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			update_by = #{updateBy.id},
+			fsort = #{fsort},
+			fstatus = #{fstatus}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM goods_size
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE goods_size SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Size" statementType="STATEMENT">
+		select * FROM goods_size  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

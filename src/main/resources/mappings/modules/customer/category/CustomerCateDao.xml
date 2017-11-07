@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.customer.dao.category.CustomerCateDao">
+    
+	<sql id="customerCateColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.fname AS "fname",
+		a.fdiscount AS "fdiscount",
+		a.fstatus AS "fstatus",
+		a.company_id AS "fsponsor.id",
+		a.office_id AS "fstore.id",
+		fstore.name AS "fstore.name",
+		fsponsor.name AS "fsponsor.name"
+	</sql>
+	
+	<sql id="customerCateJoins">
+	LEFT JOIN sys_office fsponsor ON fsponsor.id = a.company_id
+	LEFT JOIN sys_office fstore ON fstore.id = a.office_id
+	LEFT JOIN sys_user createby ON createby.id = a.create_by
+	</sql>
+	
+    
+	<select id="get" resultType="CustomerCate" >
+		SELECT 
+			<include refid="customerCateColumns"/>
+		FROM customer_cate a
+		<include refid="customerCateJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findByName" resultType="CustomerCate" >
+		SELECT 
+			<include refid="customerCateColumns"/>
+		FROM customer_cate a
+		<include refid="customerCateJoins"/>
+		WHERE a.fname LIKE concat('%',#{fname},'%')
+	</select>
+	
+	<select id="findList" resultType="CustomerCate" >
+		SELECT 
+			<include refid="customerCateColumns"/>
+		FROM customer_cate a
+		<include refid="customerCateJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="id != null and id != ''">
+				AND a.id = #{id}
+			</if>
+			<if test="createBy != null and createBy.id != null and createBy.id != ''">
+				AND a.create_by = #{createBy.id}
+			</if>
+			<if test="createDate != null and createDate != ''">
+				AND a.create_date LIKE 
+					<if test="dbName == 'oracle'">'%'||#{createDate}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{createDate}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{createDate},'%')</if>
+			</if>
+			<if test="updateBy != null and updateBy.id != null and updateBy.id != ''">
+				AND a.update_by = #{updateBy.id}
+			</if>
+			<if test="updateDate != null and updateDate != ''">
+				AND a.update_date LIKE 
+					<if test="dbName == 'oracle'">'%'||#{updateDate}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{updateDate}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{updateDate},'%')</if>
+			</if>
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+					<if test="dbName == 'oracle'">'%'||#{fname}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fname}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fname},'%')</if>
+			</if>
+			<if test="fdiscount != null and fdiscount != ''">
+				AND a.fdiscount = #{fdiscount}
+			</if>
+			<if test="fstatus != null and fstatus != ''">
+				AND a.fstatus = #{fstatus}
+			</if>
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="CustomerCate" >
+		SELECT 
+			<include refid="customerCateColumns"/>
+		FROM customer_cate a
+		<include refid="customerCateJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO customer_cate(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			fname,
+			fdiscount,
+			company_id,
+			office_id,
+			fstatus
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{fname},
+			#{fdiscount},
+			#{fsponsor.id},
+			#{fstore.id},
+			#{fstatus}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE customer_cate SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			fname = #{fname},
+			fdiscount = #{fdiscount},
+			company_id = #{fsponsor.id},
+			office_id = #{fstore.id},
+			fstatus = #{fstatus}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM customer_cate
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE customer_cate SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="CustomerCate" statementType="STATEMENT">
+		select * FROM customer_cate  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

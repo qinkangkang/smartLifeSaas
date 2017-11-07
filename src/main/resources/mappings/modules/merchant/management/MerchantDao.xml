@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.merchant.dao.management.MerchantDao">
+    
+	<sql id="merchantColumns">
+		a.id AS "id",
+		a.fname AS "fname",
+		a.area_id AS "area.id",
+		a.code AS "code",
+		a.fmaster AS "fmaster",
+		a.fcellphone AS "cellphone",
+		a.femail AS "femail",
+		a.fsort AS "fsort",
+		a.fstatus AS "fstatus",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		area.name AS "area.name"
+	</sql>
+	
+	<sql id="merchantJoins">
+		LEFT JOIN sys_area area ON area.id = a.area_id
+	</sql>
+	
+    
+	<select id="get" resultType="Merchant" >
+		SELECT 
+			<include refid="merchantColumns"/>
+		FROM s_merchant a
+		<include refid="merchantJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="Merchant" >
+		SELECT 
+			<include refid="merchantColumns"/>
+		FROM s_merchant a
+		<include refid="merchantJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+					<if test="dbName == 'oracle'">'%'||#{fname}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fname}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fname},'%')</if>
+			</if>
+			<if test="area != null and area.id != null and area.id != ''">
+				AND a.area_id LIKE 
+					<if test="dbName == 'oracle'">'%'||#{area.id}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{area.id}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{area.id},'%')</if>
+			</if>
+			<if test="fmaster != null and fmaster != ''">
+				AND a.fmaster LIKE
+					<if test="dbName == 'oracle'">'%'||#{fmaster}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fmaster}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fmaster},'%')</if>
+				
+			</if>
+			<if test="cellphone != null and cellphone != ''">
+				AND a.fcellphone LIKE
+					<if test="dbName == 'oracle'">'%'||#{cellphone}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{cellphone}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{cellphone},'%')</if>
+			</if>
+			<if test="beginCreateDate != null and endCreateDate != null and beginCreateDate != '' and endCreateDate != ''">
+				AND a.create_date BETWEEN #{beginCreateDate} AND #{endCreateDate}
+			</if>
+			<if test="beginUpdateDate != null and endUpdateDate != null and beginUpdateDate != '' and endUpdateDate != ''">
+				AND a.update_date BETWEEN #{beginUpdateDate} AND #{endUpdateDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Merchant" >
+		SELECT 
+			<include refid="merchantColumns"/>
+		FROM s_merchant a
+		<include refid="merchantJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO s_merchant(
+			id,
+			fname,
+			area_id,
+			code,
+			fmaster,
+			fcellphone,
+			femail,
+			fsort,
+			fstatus,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{fname},
+			#{area.id},
+			#{code},
+			#{fmaster},
+			#{cellphone},
+			#{femail},
+			#{fsort},
+			#{fstatus},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE s_merchant SET 	
+			fname = #{fname},
+			area_id = #{area.id},
+			code = #{code},
+			fmaster = #{fmaster},
+			fcellphone = #{cellphone},
+			femail = #{femail},
+			fsort = #{fsort},
+			fstatus = #{fstatus},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM s_merchant
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE s_merchant SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Merchant" statementType="STATEMENT">
+		select * FROM s_merchant  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListByarea" resultType="Area">
+		SELECT 
+			*
+		FROM sys_area a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+				<if test="dbName == 'oracle'">#{name}||'%'</if>
+				<if test="dbName == 'mssql'">#{name}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{name},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

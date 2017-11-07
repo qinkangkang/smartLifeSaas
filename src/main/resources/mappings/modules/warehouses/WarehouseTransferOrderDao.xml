@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.warehouses.dao.WarehouseTransferOrderDao">
+    
+	<sql id="warehouseTransferOrderColumns">
+	
+		a.id AS "id",
+		a.ftransfer_order AS "ftransferOrder",
+		a.fwarehouseout_by AS "warehouseOut.id",
+		a.fwarehousein_by AS "fwarehouseIn.id",
+		a.ftransfer_date AS "ftransferDate",
+		a.fstatus AS "fstatus",
+		a.create_by AS "createBy.id",
+		a.update_by AS "updateBy.id",
+		a.create_date AS "createDate",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.company_id AS "company.id",
+		a.office_id AS "office.id",
+		warehouseOut.fname AS "warehouseOut.fname",
+		fwarehouseIn.fname AS "fwarehouseIn.fname",
+		c.name AS "company.name",
+    	c.parent_id AS "company.parent.id",
+    	c.parent_ids AS "company.parentIds",
+		o.name AS "office.name",
+    	o.parent_id AS "office.parent.id",
+    	o.parent_ids AS "office.parentIds"
+	</sql>
+	
+	<sql id="warehouseTransferOrderJoins">
+		LEFT JOIN warehouse warehouseOut ON warehouseOut.id = a.fwarehouseout_by
+		LEFT JOIN warehouse fwarehouseIn ON fwarehouseIn.id = a.fwarehousein_by
+		LEFT JOIN  sys_office c ON c.id = a.company_id
+		LEFT JOIN  sys_office o ON o.id = a.office_id
+		LEFT JOIN sys_user createby ON createby.id = a.create_by
+	</sql>
+	
+    
+	<select id="get" resultType="WarehouseTransferOrder" >
+		SELECT 
+			<include refid="warehouseTransferOrderColumns"/>
+		FROM warehouse_transferorder a
+		<include refid="warehouseTransferOrderJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="WarehouseTransferOrder" >
+		SELECT 
+			<include refid="warehouseTransferOrderColumns"/>
+		FROM warehouse_transferorder a
+		<include refid="warehouseTransferOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="ftransferOrder != null and ftransferOrder != ''">
+				AND a.ftransfer_order = #{ftransferOrder}
+			</if>
+			<if test="warehouseOut != null and warehouseOut.id != null and warehouseOut.id != ''">
+				AND a.fwarehouseout_by = #{warehouseOut.id}
+			</if>
+			<if test="fwarehouseIn != null and fwarehouseIn.id != null and fwarehouseIn.id != ''">
+				AND a.fwarehousein_by = #{fwarehouseIn.id}
+			</if>
+			<if test="beginFtransferDate != null and endFtransferDate != null and beginFtransferDate != '' and endFtransferDate != ''">
+				AND a.ftransfer_date BETWEEN #{beginFtransferDate} AND #{endFtransferDate}
+			</if>
+			<if test="fstatus != null and fstatus != ''">
+				AND a.fstatus = #{fstatus}
+			</if>
+			<!-- 数据范围过滤 -->
+				${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="WarehouseTransferOrder" >
+		SELECT 
+			<include refid="warehouseTransferOrderColumns"/>
+		FROM warehouse_transferorder a
+		<include refid="warehouseTransferOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO warehouse_transferorder(
+			id,
+			ftransfer_order,
+			fwarehouseout_by,
+			fwarehousein_by,
+			ftransfer_date,
+			fstatus,
+			create_by,
+			update_by,
+			create_date,
+			update_date,
+			remarks,
+			del_flag,
+			company_id,
+			office_id
+		) VALUES (
+			#{id},
+			#{ftransferOrder},
+			#{warehouseOut.id},
+			#{fwarehouseIn.id},
+			#{ftransferDate},
+			#{fstatus},
+			#{createBy.id},
+			#{updateBy.id},
+			#{createDate},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{company.id},
+			#{office.id}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE warehouse_transferorder SET 	
+			ftransfer_order = #{ftransferOrder},
+			fwarehouseout_by = #{warehouseOut.id},
+			fwarehousein_by = #{fwarehouseIn.id},
+			ftransfer_date = #{ftransferDate},
+			fstatus = #{fstatus},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			company_id = #{company.id},
+			office_id = #{office.id}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM warehouse_transferorder
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE warehouse_transferorder SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="WarehouseTransferOrder" statementType="STATEMENT">
+		select * FROM warehouse_transferorder  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListBywarehouseOut" resultType="Warehouse">
+		SELECT 
+			*
+		FROM warehouse a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+				<if test="dbName == 'oracle'">#{fname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fname},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByfwarehouseIn" resultType="Warehouse">
+		SELECT 
+			*
+		FROM warehouse a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+				<if test="dbName == 'oracle'">'%'||#{fname}||'%'</if>
+				<if test="dbName == 'mssql'">'%'+#{fname}+'%'</if>
+				<if test="dbName == 'mysql'">concat('%',#{fname},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<!--调拨中的调拨单  -->
+	<select id="findCountByType" resultType="int">
+		select count(1) from warehouse_transferorder a where a.fstatus='0'
+	</select>
+	
+</mapper>

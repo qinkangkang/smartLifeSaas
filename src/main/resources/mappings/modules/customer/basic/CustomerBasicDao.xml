@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.customer.dao.basic.CustomerBasicDao">
+    
+	<sql id="customerBasicColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.fcategory AS "fcategoryId",
+		a.fname AS "fname",
+		a.fsex AS "fsex",
+		a.fbirthday AS "fbirthday",
+		a.flinkman AS "flinkman",
+		a.fphone AS "fphone",
+		a.fcellphone AS "fcellphone",
+		a.femail AS "femail",
+		a.ffax AS "ffax",
+		a.fbankaccount AS "fbankaccount",
+		a.fbankaccountnum AS "fbankaccountnum",
+		a.fbank AS "fbank",
+		a.fbankaccountname AS "fbankaccountname",
+		a.fbankaccountpersonid AS "fbankaccountpersonid",
+		a.fbankphone AS "fbankphone",
+		a.fdebt AS "fdebt",
+		a.fsort AS "fsort",
+		a.faddress AS "faddress",
+		a.fshipmenttype AS "fshipmenttype",
+		a.fisrelate AS "fisrelate",
+		a.fstatus AS "fstatus",
+		a.fcustomerinfo AS "fcustomerinfo",
+		a.fpaytype AS "fpaytype",
+		a.fdiscount AS "fdiscount",
+		a.fcatename AS "fcatename",
+		a.company_id AS "fsponsor.id",
+		a.office_id AS "fstore.id",
+		fstore.name AS "fstore.name",
+		fsponsor.name AS "fsponsor.name"
+	</sql>
+	
+	<sql id="customerBasicJoins">
+	LEFT JOIN sys_office fsponsor ON fsponsor.id = a.company_id
+	LEFT JOIN sys_office fstore ON fstore.id = a.company_id
+	LEFT JOIN sys_user createby ON createby.id = a.create_by
+	</sql>
+	
+    
+	<select id="get" resultType="CustomerBasic" >
+		SELECT 
+			<include refid="customerBasicColumns"/>
+		FROM customer_basic a
+		<include refid="customerBasicJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="CustomerBasic" >
+		SELECT 
+			<include refid="customerBasicColumns"/>
+		FROM customer_basic a
+		<include refid="customerBasicJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="beginCreateDate != null and endCreateDate != null and beginCreateDate != '' and endCreateDate != ''">
+				AND a.create_date BETWEEN #{beginCreateDate} AND #{endCreateDate}
+			</if>
+			<if test="fcategoryId != null and fcategoryId != ''">
+				AND a.fcategory = #{fcategoryId}
+			</if>
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+					<if test="dbName == 'oracle'">'%'||#{fname}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fname}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fname},'%')</if>
+			</if>
+			<if test="fsex != null and fsex != ''">
+				AND a.fsex = #{fsex}
+			</if>
+			<if test="fcellphone != null and fcellphone != ''">
+				AND a.fcellphone = #{fcellphone}
+			</if>
+			<if test="beginFdebt != null and endFdebt != null and beginFdebt != '' and endFdebt != ''">
+				AND a.fdebt BETWEEN #{beginFdebt} AND #{endFdebt}
+			</if>
+			<if test="fstatus != null and fstatus != ''">
+				AND a.fstatus = #{fstatus}
+			</if>
+			<if test="fdiscount != null and fdiscount != ''">
+				AND a.fdiscount = #{fdiscount}
+			</if>
+			<!--
+			<if test="fsponsor != null and fsponsor.id != null and fsponsor.id != ''">
+				 AND a.fsponsorid = #{fsponsor.id} 
+			</if>
+			 -->
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="CustomerBasic" >
+		SELECT 
+			<include refid="customerBasicColumns"/>
+		FROM customer_basic a
+		<include refid="customerBasicJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<!-- 数据范围过滤
+			${sqlMap.dsf}
+			 -->
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO customer_basic(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			fcategory,
+			fname,
+			fsex,
+			fbirthday,
+			flinkman,
+			fphone,
+			fcellphone,
+			femail,
+			ffax,
+			fbankaccount,
+			fbankaccountnum,
+			fbank,
+			fbankaccountname,
+			fbankaccountpersonid,
+			fbankphone,
+			fdebt,
+			fsort,
+			faddress,
+			fshipmenttype,
+			fisrelate,
+			fstatus,
+			fcustomerinfo,
+			fpaytype,
+			fdiscount,
+			company_id,
+			office_id,
+			fcatename
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{fcategoryId},
+			#{fname},
+			#{fsex},
+			#{fbirthday},
+			#{flinkman},
+			#{fphone},
+			#{fcellphone},
+			#{femail},
+			#{ffax},
+			#{fbankaccount},
+			#{fbankaccountnum},
+			#{fbank},
+			#{fbankaccountname},
+			#{fbankaccountpersonid},
+			#{fbankphone},
+			#{fdebt},
+			#{fsort},
+			#{faddress},
+			#{fshipmenttype},
+			#{fisrelate},
+			#{fstatus},
+			#{fcustomerinfo},
+			#{fpaytype},
+			#{fdiscount},
+			#{fsponsor.id},
+			#{fstore.id},
+			#{fcatename}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE customer_basic SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			fcategory = #{fcategoryId},
+			fname = #{fname},
+			fsex = #{fsex},
+			fbirthday = #{fbirthday},
+			flinkman = #{flinkman},
+			fphone = #{fphone},
+			fcellphone = #{fcellphone},
+			femail = #{femail},
+			ffax = #{ffax},
+			fbankaccount = #{fbankaccount},
+			fbankaccountnum = #{fbankaccountnum},
+			fbank = #{fbank},
+			fbankaccountname = #{fbankaccountname},
+			fbankaccountpersonid = #{fbankaccountpersonid},
+			fbankphone = #{fbankphone},
+			fdebt = #{fdebt},
+			fsort = #{fsort},
+			faddress = #{faddress},
+			fshipmenttype = #{fshipmenttype},
+			fisrelate = #{fisrelate},
+			fstatus = #{fstatus},
+			fcustomerinfo = #{fcustomerinfo},
+			fpaytype = #{fpaytype},
+			fdiscount = #{fdiscount},
+			company_id = #{fsponsor.id},
+			office_id = #{fstore.id},
+			fcatename = #{fcatename}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM customer_basic
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE customer_basic SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="CustomerBasic" statementType="STATEMENT">
+		select * FROM customer_basic  where ${propertyName} = '${value}'
+	</select>
+	<select id="findByCellphone" resultType="CustomerBasic" >
+		SELECT 
+			<include refid="customerBasicColumns"/>
+		FROM customer_basic a
+		<include refid="customerBasicJoins"/>
+		WHERE a.fcellphone = #{fcellphone}
+	</select>
+	
+	
+</mapper>

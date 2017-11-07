@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.report.dao.MarketBackReportDao">
+    
+	<sql id="orderMarketChaDetailColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.fordermarketid AS "fordermarket.id",
+		a.fspuid AS "fspu.id",
+		a.fgoodsnum AS "fgoodsnum",
+		a.fgoodsprice AS "fgoodsprice",
+		a.fgoodsdiscount AS "fgoodsdiscount",
+		a.fdiscountprice AS "fdiscountprice",
+		a.fcountmoney AS "fcountmoney",
+		a.fdiscountcountmoney AS "fdiscountcountmoney",
+		a.fskuid AS "fsku.id",
+		a.fstatus AS "fstatus",
+		a.fordermarketchargebackid AS "fordermarketchargeback.id",
+		b.fordernum AS "fordermarketchargeback.fordernum",
+		b.fcustomerid AS "fordermarketchargeback.customerBasic.id",
+		b.fordercountprice AS "fordermarketchargeback.fordercountprice",
+		b.fdiscountprice AS "fordermarketchargeback.fdiscountprice",
+		b.fendtime AS "fordermarketchargeback.fendtime",
+		b.remarks AS "fordermarketchargeback.remarks",
+		c.fname AS "fordermarketchargeback.customerBasic.fname",
+		d.fname AS "fordermarketchargeback.warehouse.fname",
+		e.faccountname AS "fordermarketchargeback.clearingAccount.faccountname",
+		fspu.fgoodsname AS "fspu.fgoodsname",
+		fspu.fbuyprice AS "fspu.fbuyprice",
+		fsku.fgoodsnumber AS "fsku.fgoodsnumber",
+		fsku.fbarcode AS "fsku.fbarcode",
+		fsku.fcolor_id AS "fsku.colors.id",
+		fsku.fsize_id AS "fsku.size.id",
+		brand.fbrandname AS "fspu.brand.fbrandname",
+		unit.funitname AS "fspu.goodsUnit.funitname",
+		category.name AS "fspu.categorys.name",
+		fspu.fbuyprice * a.fgoodsnum AS "purchasingCost",
+		a.fcountmoney - (fspu.fbuyprice * a.fgoodsnum) AS "grossProfit",
+		createbyb.name AS "fordermarketchargeback.createBy.name",
+		updatebyb.name AS "fordermarketchargeback.updateBy.name",
+		office.name AS "fordermarketchargeback.updateBy.office.name",
+		woffice.name AS "fordermarketchargeback.warehouse.office.name"
+	</sql>
+	
+	<sql id="orderMarketChaDetailJoins">
+		LEFT JOIN order_market_chargeback b ON b.id = a.fordermarketchargebackid
+		LEFT JOIN customer_basic c ON c.id = b.fcustomerid
+		LEFT JOIN warehouse d ON d.id = b.fwarehoseid
+		LEFT JOIN fd_clearing_account e ON e.id = b.fclearingaccount
+		LEFT JOIN goods_spu fspu ON fspu.id = a.fspuid
+		LEFT JOIN goods_sku fsku ON fsku.id = a.fskuid
+		LEFT JOIN goods_brand brand ON brand.id = fspu.brand_id
+		LEFT JOIN goods_unit unit ON unit.id = fspu.funit_id
+		LEFT JOIN goods_category category ON category.id = fspu.fcategorys_id
+		LEFT JOIN sys_user createbyb ON createbyb.id = b.create_by
+		LEFT JOIN sys_user updatebyb ON updatebyb.id = b.create_by
+		LEFT JOIN sys_office office ON office.id = updatebyb.office_id
+		LEFT JOIN sys_office woffice ON woffice.id = d.office_id
+	</sql>
+	
+    
+	<select id="get" resultType="OrderMarketChaDetail" >
+		SELECT 
+			<include refid="orderMarketChaDetailColumns"/>
+		FROM order_market_chargeback_detail a
+		<include refid="orderMarketChaDetailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="OrderMarketChaDetail" >
+		SELECT 
+			<include refid="orderMarketChaDetailColumns"/>
+		FROM order_market_chargeback_detail a
+		<include refid="orderMarketChaDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fordermarketchargeback != null and fordermarketchargeback.id != null and fordermarketchargeback.id != ''">
+				AND a.fordermarketchargebackid = #{fordermarketchargeback.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="OrderMarketChaDetail" >
+		SELECT 
+			<include refid="orderMarketChaDetailColumns"/>
+		FROM order_market_chargeback_detail a
+		<include refid="orderMarketChaDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO order_market_chargeback_detail(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			fordermarketid,
+			fspuid,
+			fgoodsnum,
+			fgoodsprice,
+			fgoodsdiscount,
+			fdiscountprice,
+			fcountmoney,
+			fdiscountcountmoney,
+			fskuid,
+			fstatus,
+			fordermarketchargebackid,
+			fwarehousegoodsinfoid
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{fordermarket.id},
+			#{fspu.id},
+			#{fgoodsnum},
+			#{fgoodsprice},
+			#{fgoodsdiscount},
+			#{fdiscountprice},
+			#{fcountmoney},
+			#{fdiscountcountmoney},
+			#{fsku.id},
+			#{fstatus},
+			#{fordermarketchargeback.id},
+			#{fwarehousegoodsinfo.id}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE order_market_chargeback_detail SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			fordermarketid = #{fordermarket.id},
+			fspuid = #{fspu.id},
+			fgoodsnum = #{fgoodsnum},
+			fgoodsprice = #{fgoodsprice},
+			fgoodsdiscount = #{fgoodsdiscount},
+			fdiscountprice = #{fdiscountprice},
+			fcountmoney = #{fcountmoney},
+			fdiscountcountmoney = #{fdiscountcountmoney},
+			fskuid = #{fsku.id},
+			fstatus = #{fstatus},
+			fordermarketchargebackid = #{fordermarketchargeback.id},
+			fwarehousegoodsinfoid=#{fwarehousegoodsinfo.id}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM order_market_chargeback_detail
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE fordermarketchargebackid = #{fordermarketchargeback.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE order_market_chargeback_detail SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE fordermarketchargebackid = #{fordermarketchargeback.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="OrderMarketChaDetail" statementType="STATEMENT">
+		select * FROM order_market_chargeback_detail  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListByfordermarket" resultType="OrderMarket">
+		SELECT 
+			*
+		FROM order_market a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fordernum != null and fordernum != ''">
+				AND a.fordernum LIKE 
+				<if test="dbName == 'oracle'">#{fordernum}||'%'</if>
+				<if test="dbName == 'mssql'">#{fordernum}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fordernum},'%')</if>
+			</if>
+			AND a.fstatus=3
+			<!-- 权限过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByfspu" resultType="GoodsSpu">
+		SELECT 
+			*
+		FROM goods_spu a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fgoodsname != null and fgoodsname != ''">
+				AND a.fgoodsname LIKE 
+				<if test="dbName == 'oracle'">#{fgoodsname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fgoodsname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fgoodsname},'%')</if>
+			</if>
+			AND a.fstatus != '2'
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByfsku" resultType="GoodsSku">
+		SELECT 
+			*
+		FROM goods_sku a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fgoodsnumber != null and fgoodsnumber != ''">
+				AND a.fgoodsnumber LIKE 
+				<if test="dbName == 'oracle'">#{fgoodsnumber}||'%'</if>
+				<if test="dbName == 'mssql'">#{fgoodsnumber}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fgoodsnumber},'%')</if>
+			</if>
+			AND a.fstatus != '2'
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByfordermarketchargeback" resultType="OrderMarketCha">
+		SELECT 
+			*
+		FROM order_market_chargeback a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fordernum != null and fordernum != ''">
+				AND a.fordernum LIKE 
+				<if test="dbName == 'oracle'">#{fordernum}||'%'</if>
+				<if test="dbName == 'mssql'">#{fordernum}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fordernum},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="getMarketBackGoodsNum" resultType="int" >
+		SELECT sum(a.fgoodsnum)
+		FROM order_market_chargeback_detail a
+		<include refid="orderMarketChaDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fordermarketchargeback != null and fordermarketchargeback.id != null and fordermarketchargeback.id != ''">
+				AND a.fordermarketchargebackid = #{fordermarketchargeback.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getMarketBackValue" resultType="double" >
+		SELECT sum(a.fcountmoney)
+		FROM order_market_chargeback_detail a
+		<include refid="orderMarketChaDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fordermarketchargeback != null and fordermarketchargeback.id != null and fordermarketchargeback.id != ''">
+				AND a.fordermarketchargebackid = #{fordermarketchargeback.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getMarketBackGrossMargin" resultType="double" >
+		SELECT sum(a.fcountmoney - (fspu.fbuyprice * a.fgoodsnum))
+		FROM order_market_chargeback_detail a
+		<include refid="orderMarketChaDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fordermarketchargeback != null and fordermarketchargeback.id != null and fordermarketchargeback.id != ''">
+				AND a.fordermarketchargebackid = #{fordermarketchargeback.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+</mapper>

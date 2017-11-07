@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.market.dao.ordermarketchargeback.OrderMarketChaDao">
+    
+	<sql id="orderMarketChaColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.fordernum AS "fordernum",
+		a.fcustomerid AS "customerBasic.id",
+		a.fwarehoseid AS "warehouse.id",
+		a.fclearingaccount AS "clearingAccount.id",
+		a.fshipmenttype AS "fshipmenttype",
+		a.fordertype AS "fordertype",
+		a.fstatus AS "fstatus",
+		a.fendtime AS "fendtime",
+		a.fothermoney AS "fothermoney",
+		a.fcountprice AS "fcountprice",
+		a.faccounttype AS "accountType.id",
+		a.fcutsmall AS "fcutsmall",
+		a.fordercountprice AS "fordercountprice",
+		a.fordermodel AS "fordermodel",
+		a.company_id AS "fsponsor.id",
+		a.fprint AS "fprint",
+		a.fmodeltypeid AS "fmodeltype.id",
+		a.fproceeds AS "fproceeds",
+		a.fdebt AS "fdebt",
+		a.remarks AS "remarks",
+		a.office_id AS "fstore.id",
+		a.forderdiscount AS "forderdiscount",
+		a.fdiscountprice AS "fdiscountprice",
+		fstore.name AS "fstore.name",
+		customerBasic.fname AS "customerBasic.fname",
+		customerBasic.fdiscount AS "customerBasic.fdiscount",
+		warehouse.fname AS "warehouse.fname",
+		clearingAccount.faccountname AS "clearingAccount.faccountname",
+		accountType.ftypename AS "accountType.ftypename",
+		fsponsor.name AS "fsponsor.name",
+		fmodeltype.fname AS "fmodeltype.fname"
+	</sql>
+	
+	<sql id="orderMarketChaJoins">
+		LEFT JOIN customer_basic customerBasic ON customerBasic.id = a.fcustomerid
+		LEFT JOIN warehouse warehouse ON warehouse.id = a.fwarehoseid
+		LEFT JOIN fd_clearing_account clearingAccount ON clearingAccount.id = a.fclearingaccount
+		LEFT JOIN fd_account_type accountType ON accountType.id = a.faccounttype
+		LEFT JOIN sys_office fsponsor ON fsponsor.id = a.company_id
+		LEFT JOIN sys_model_type fmodeltype ON fmodeltype.id = a.fmodeltypeid
+		LEFT JOIN sys_office fstore ON fstore.id = a.office_id
+	</sql>
+	
+    
+	<select id="get" resultType="OrderMarketCha" >
+		SELECT 
+			<include refid="orderMarketChaColumns"/>
+		FROM order_market_chargeback a
+		<include refid="orderMarketChaJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="OrderMarketCha" >
+		SELECT 
+			<include refid="orderMarketChaColumns"/>
+		FROM order_market_chargeback a
+		<include refid="orderMarketChaJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="createBy != null and createBy.id != null and createBy.id != ''">
+				AND a.create_by = #{createBy.id}
+			</if>
+			<if test="updateBy != null and updateBy.id != null and updateBy.id != ''">
+				AND a.update_by = #{updateBy.id}
+			</if>
+			<if test="customerBasic != null and customerBasic.id != null and customerBasic.id != ''">
+				AND a.fcustomerid = #{customerBasic.id}
+			</if>
+			<if test="warehouse != null and warehouse.id != null and warehouse.id != ''">
+				AND a.fwarehoseid = #{warehouse.id}
+			</if>
+			<if test="clearingAccount != null and clearingAccount.id != null and clearingAccount.id != ''">
+				AND a.fclearingaccount = #{clearingAccount.id}
+			</if>
+			<if test="fsponsor != null and fsponsor.id != null and fsponsor.id != ''">
+				AND a.fsponsorid = #{fsponsor.id}
+			</if>
+			<!-- 权限过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="OrderMarketCha" >
+		SELECT 
+			<include refid="orderMarketChaColumns"/>
+		FROM order_market_chargeback a
+		<include refid="orderMarketChaJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<!-- 权限过滤 -->
+			${sqlMap.dsf}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO order_market_chargeback(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			fordernum,
+			fcustomerid,
+			fwarehoseid,
+			fclearingaccount,
+			fshipmenttype,
+			fordertype,
+			fstatus,
+			fendtime,
+			fothermoney,
+			fcountprice,
+			faccounttype,
+			fcutsmall,
+			fordercountprice,
+			fordermodel,
+			company_id,
+			fprint,
+			fmodeltypeid,
+			fproceeds,
+			fdebt,
+			office_id,
+			forderdiscount,
+			fdiscountprice,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{fordernum},
+			#{customerBasic.id},
+			#{warehouse.id},
+			#{clearingAccount.id},
+			#{fshipmenttype},
+			#{fordertype},
+			#{fstatus},
+			#{fendtime},
+			#{fothermoney},
+			#{fcountprice},
+			#{accountType.id},
+			#{fcutsmall},
+			#{fordercountprice},
+			#{fordermodel},
+			#{fsponsor.id},
+			#{fprint},
+			#{fmodeltype.id},
+			#{fproceeds},
+			#{fdebt},
+			#{fstore.id},
+			#{forderdiscount},
+			#{fdiscountprice},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE order_market_chargeback SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			fordernum = #{fordernum},
+			fcustomerid = #{customerBasic.id},
+			fwarehoseid = #{warehouse.id},
+			fclearingaccount = #{clearingAccount.id},
+			fshipmenttype = #{fshipmenttype},
+			fordertype = #{fordertype},
+			fstatus = #{fstatus},
+			fendtime = #{fendtime},
+			fothermoney = #{fothermoney},
+			fcountprice = #{fcountprice},
+			faccounttype = #{accountType.id},
+			fcutsmall = #{fcutsmall},
+			fordercountprice = #{fordercountprice},
+			fordermodel = #{fordermodel},
+			company_id = #{fsponsor.id},
+			fprint = #{fprint},
+			fmodeltypeid = #{fmodeltype.id},
+			fproceeds = #{fproceeds},
+			fdebt = #{fdebt},
+			office_id=#{fstore.id},
+			forderdiscount = #{forderdiscount},
+			fdiscountprice = #{fdiscountprice},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM order_market_chargeback
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE order_market_chargeback SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="OrderMarketCha" statementType="STATEMENT">
+		select * FROM order_market_chargeback  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListBycustomerBasic" resultType="CustomerBasic">
+		SELECT 
+			*
+		FROM customer_basic a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+				<if test="dbName == 'oracle'">#{fname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fname},'%')</if>
+			</if>
+			<!-- 权限过滤 -->
+			${sqlMap.dsf}
+			AND a.fstatus != '2'
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListBywarehouse" resultType="Warehouse">
+		SELECT 
+			*
+		FROM warehouse a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+				<if test="dbName == 'oracle'">#{fname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fname},'%')</if>
+			</if>
+			<!-- 权限过滤 -->
+			${sqlMap.dsf}
+			AND a.fstatus != '2'
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByclearingAccount" resultType="ClearingAccount">
+		SELECT 
+			*
+		FROM fd_clearing_account a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="faccountname != null and faccountname != ''">
+				AND a.faccountname LIKE 
+				<if test="dbName == 'oracle'">#{faccountname}||'%'</if>
+				<if test="dbName == 'mssql'">#{faccountname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{faccountname},'%')</if>
+			</if>
+			<!-- 权限过滤 -->
+			${sqlMap.dsf}
+			AND a.fstatus != 2
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByaccountType" resultType="AccountType">
+		SELECT 
+			*
+		FROM fd_account_type a
+		<where>
+			a.delflag = #{DEL_FLAG_NORMAL}
+			<if test="ftypename != null and ftypename != ''">
+				AND a.ftypename LIKE 
+				<if test="dbName == 'oracle'">#{ftypename}||'%'</if>
+				<if test="dbName == 'mssql'">#{ftypename}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{ftypename},'%')</if>
+			</if>
+			<!-- 权限过滤 -->
+			${sqlMap.dsf}
+			AND a.fstatus != 2
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.updatedate DESC
+			</otherwise>
+		</choose>
+	</select>
+	<!--select id="findListByfsponsor" resultType="Office">
+		SELECT 
+			*
+		FROM sys_office a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.fname LIKE 
+				<if test="dbName == 'oracle'">#{name}||'%'</if>
+				<if test="dbName == 'mssql'">#{name}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{name},'%')</if>
+			</if>
+			AND a.USEABLE = '1'
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select-->
+	<select id="findListByfmodeltype" resultType="SysModelType">
+		SELECT 
+			*
+		FROM sys_model_type a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+				<if test="dbName == 'oracle'">#{fname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fname},'%')</if>
+			</if>
+			AND a.fstatus = 1
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

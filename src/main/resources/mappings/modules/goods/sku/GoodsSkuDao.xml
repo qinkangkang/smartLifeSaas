@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.goods.dao.sku.GoodsSkuDao">
+    
+	<sql id="goodsSkuColumns">
+		a.id AS "id",
+		a.fgoodsnumber AS "fgoodsnumber",
+		a.fcolor_id AS "colors.id",
+		a.fsize_id AS "size.id",
+		a.fprice AS "fprice",
+		a.fonsalesprice AS "fonsalesprice",
+		a.fbarcode AS "fbarcode",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.id",
+		a.update_by AS "updateBy.id",
+		a.fcreate_date AS "createDate",
+		a.update_date AS "updateDate",
+		a.fsort AS "fsort",
+		a.fstatus AS "fstatus",
+		a.fspuid AS "goodsSpu.id",
+		a.fstorelowerno AS "fstorelowerno",
+		a.fstoreupperno AS "fstoreupperno",
+		colors.fcolorname AS "colors.fcolorname",
+		size.fsizename AS "size.fsizename"
+	</sql>
+	
+	<sql id="goodsSkuJoins">
+		LEFT JOIN goods_spu b ON b.id = a.fspuid
+		LEFT JOIN sys_user createby ON createby.id = a.create_by
+		LEFT JOIN goods_color colors ON colors.id = a.fcolor_id
+		LEFT JOIN goods_size size ON size.id = a.fsize_id
+	</sql>
+	
+    
+	<select id="get" resultType="GoodsSku" >
+		SELECT 
+			<include refid="goodsSkuColumns"/>
+		FROM goods_sku a
+		<include refid="goodsSkuJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="GoodsSku" >
+		SELECT 
+			<include refid="goodsSkuColumns"/>
+		FROM goods_sku a
+		<include refid="goodsSkuJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fgoodsnumber != null and fgoodsnumber != ''">
+				AND a.fgoodsnumber LIKE 
+					<if test="dbName == 'oracle'">'%'||#{fgoodsnumber}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fgoodsnumber}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fgoodsnumber},'%')</if>
+			</if>
+			<if test="colors != null and colors.id != null and colors.id != ''">
+				AND a.fcolor_id = #{colors.id}
+			</if>
+			<if test="size != null and size.id != null and size.id != ''">
+				AND a.fsize_id = #{size.id}
+			</if>
+			<if test="beginFonsalesprice != null and endFonsalesprice != null and beginFonsalesprice != '' and endFonsalesprice != ''">
+				AND a.fonsalesprice BETWEEN #{beginFonsalesprice} AND #{endFonsalesprice}
+			</if>
+			<if test="fbarcode != null and fbarcode != ''">
+				AND a.fbarcode LIKE 
+					<if test="dbName == 'oracle'">'%'||#{fbarcode}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fbarcode}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fbarcode},'%')</if>
+			</if>
+			<if test="remarks != null and remarks != ''">
+				AND a.remarks = #{remarks}
+			</if>
+			<if test="fstatus != null and fstatus != ''">
+				AND a.fstatus = #{fstatus}
+			</if>
+			<if test="goodsSpu != null and goodsSpu.id != null and goodsSpu.id != ''">
+				AND a.fspuid = #{goodsSpu.id}
+			</if>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="GoodsSku" >
+		SELECT 
+			<include refid="goodsSkuColumns"/>
+		FROM goods_sku a
+		<include refid="goodsSkuJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO goods_sku(
+			id,
+			fgoodsnumber,
+			fcolor_id,
+			fsize_id,
+			fprice,
+			fonsalesprice,
+			fbarcode,
+			remarks,
+			del_flag,
+			create_by,
+			update_by,
+			fcreate_date,
+			update_date,
+			fsort,
+			fstatus,
+			fspuid,
+			fstorelowerno,
+			fstoreupperno
+		) VALUES (
+			#{id},
+			#{fgoodsnumber},
+			#{colors.id},
+			#{size.id},
+			#{fprice},
+			#{fonsalesprice},
+			#{fbarcode},
+			#{remarks},
+			#{delFlag},
+			#{createBy.id},
+			#{updateBy.id},
+			#{createDate},
+			#{updateDate},
+			#{fsort},
+			#{fstatus},
+			#{goodsSpu.id},
+			#{fstorelowerno},
+			#{fstoreupperno}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE goods_sku SET 	
+			fgoodsnumber = #{fgoodsnumber},
+			fcolor_id = #{colors.id},
+			fsize_id = #{size.id},
+			fprice = #{fprice},
+			fonsalesprice = #{fonsalesprice},
+			fbarcode = #{fbarcode},
+			remarks = #{remarks},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			fsort = #{fsort},
+			fstatus = #{fstatus},
+			fspuid = #{goodsSpu.id},
+			fstorelowerno = #{fstorelowerno},
+			fstoreupperno = #{fstoreupperno}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM goods_sku
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE fspuid = #{goodsSpu.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE goods_sku SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE fspuid = #{goodsSpu.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="GoodsSku" statementType="STATEMENT">
+		select * FROM goods_sku  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListBycolors" resultType="Colors">
+		SELECT 
+			*
+		FROM goods_color a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.fstatus='1'
+			<if test="fcolorname != null and fcolorname != ''">
+				AND a.fcolorname LIKE 
+				<if test="dbName == 'oracle'">#{fcolorname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fcolorname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fcolorname},'%')</if>
+			</if>
+			<if test="fsponsorid and fsponsorid.id!='' and fsponsorid.id!=null">
+				And  a.fsponsorid=#{fsponsorid.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListBysize" resultType="Size">
+		SELECT 
+			*
+		FROM goods_size a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} and a.fstatus='1'
+			<if test="fsizename != null and fsizename != ''">
+				AND a.fsizename LIKE 
+				<if test="dbName == 'oracle'">#{fsizename}||'%'</if>
+				<if test="dbName == 'mssql'">#{fsizename}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fsizename},'%')</if>
+			</if>
+			<if test="fsponsorid and fsponsorid.id!='' and fsponsorid.id!=null">
+				And  a.fsponsorid=#{fsponsorid.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	<!-- 为无条码商品设置条码 -->
+	<update id="updateBarcode">
+		update goods_sku set
+		  fbarcode=#{fbarcode}
+		  where id=#{id}
+	
+	</update>
+	
+	<!--admin 查询无条码的商品 -->
+	<select id="findBarcodeIsNullCount" resultType="GoodsSku">
+		select * from goods_sku where fbarcode is null || fbarcode=""
+	</select>
+	
+	<!-- 商家:查询无条码的商品 -->
+	<select id="findBarcodeIsNullCountByCompany" resultType="GoodsSku" parameterType="string">
+		select * from  goods_sku  t  left  join  goods_spu  p  on t.fspuid=p.id 
+		and  p.id=#{ id}
+		where  t.fbarcode is null || t.fbarcode="" 
+	</select>
+</mapper>

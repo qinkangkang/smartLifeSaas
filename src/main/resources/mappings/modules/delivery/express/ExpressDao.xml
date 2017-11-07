@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.delivery.dao.express.ExpressDao">
+    
+	<sql id="expressColumns">
+		a.fid AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.fname AS "fname",
+		a.fwebsite AS "fwebsite",
+		a.fexpresscompany AS "fexpresscompany",
+		a.frangedesc AS "frangedesc",
+		a.fsponsorid AS "fsponsorid",
+		a.status AS "status",
+		a.remarks AS "remarks"
+	</sql>
+	
+	<sql id="expressJoins">
+	</sql>
+	
+    
+	<select id="get" resultType="Express" >
+		SELECT 
+			<include refid="expressColumns"/>
+		FROM sys_express a
+		<include refid="expressJoins"/>
+		WHERE a.fid = #{id}
+	</select>
+	
+	<select id="findList" resultType="Express" >
+		SELECT 
+			<include refid="expressColumns"/>
+		FROM sys_express a
+		<include refid="expressJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+					<if test="dbName == 'oracle'">'%'||#{fname}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fname}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fname},'%')</if>
+			</if>
+			<if test="status != null and status != ''">
+				AND a.status = #{status}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Express" >
+		SELECT 
+			<include refid="expressColumns"/>
+		FROM sys_express a
+		<include refid="expressJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO sys_express(
+			fid,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			fname,
+			fwebsite,
+			fexpresscompany,
+			frangedesc,
+			fsponsorid,
+			status,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{fname},
+			#{fwebsite},
+			#{fexpresscompany},
+			#{frangedesc},
+			#{fsponsorid},
+			#{status},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_express SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			fname = #{fname},
+			fwebsite = #{fwebsite},
+			fexpresscompany = #{fexpresscompany},
+			frangedesc = #{frangedesc},
+			fsponsorid = #{fsponsorid},
+			status = #{status},
+			remarks = #{remarks}
+		WHERE fid = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM sys_express
+		WHERE fid = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE sys_express SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE fid = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByStatus">
+		UPDATE sys_express SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE fid = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Express" statementType="STATEMENT">
+		select * FROM sys_express  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

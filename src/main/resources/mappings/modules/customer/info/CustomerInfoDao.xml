@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.customer.dao.info.CustomerInfoDao">
+    
+	<sql id="customerInfoColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.fcustomerbasicid AS "fcustomerbasicid",
+		a.fisrelate AS "fisrelate",
+		a.fusername AS "fusername",
+		a.fpassword AS "fpassword",
+		a.fregisterchannel AS "fregisterchannel",
+		a.flogintime AS "flogintime",
+		a.flogouttime AS "flogouttime",
+		a.fphoto AS "fphoto",
+		a.fweixinid AS "fweixinid",
+		a.fweixinunionid AS "fweixinunionid",
+		a.fweixinname AS "fweixinname",
+		a.fregion AS "fregion",
+		a.fsex AS "fsex",
+		a.fticket AS "fticket",
+		a.flinkman AS "flinkman",
+		a.fcellphone AS "fcellphone",
+		a.femail AS "femail",
+		a.fphone AS "fphone",
+		a.ffax AS "ffax",
+		a.fbankaccount AS "fbankaccount",
+		a.fbankaccountnum AS "fbankaccountnum",
+		a.fbank AS "fbank",
+		a.fbankaccountname AS "fbankaccountname",
+		a.fbankaccountpersonid AS "fbankaccountpersonid",
+		a.fbankphone AS "fbankphone",
+		a.faddress AS "faddress",
+		a.fdiscount AS "fdiscount",
+		a.fshipmenttype AS "fshipmenttype",
+		a.fpaytype AS "fpaytype",
+		a.fdebt AS "fdebt",
+		a.fsort AS "fsort",
+		a.fcustomercateid AS "fcustomercateid",
+		a.fstatus AS "fstatus",
+		a.fcatename AS "fcatename"
+	</sql>
+	
+	<sql id="customerInfoJoins">
+	</sql>
+	
+    
+	<select id="get" resultType="CustomerInfo" >
+		SELECT 
+			<include refid="customerInfoColumns"/>
+		FROM customer_info a
+		<include refid="customerInfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findByCellphone" resultType="CustomerInfo" >
+		SELECT 
+			<include refid="customerInfoColumns"/>
+		FROM customer_info a
+		<include refid="customerInfoJoins"/>
+		WHERE a.fcellphone = #{fcellphone}
+	</select>
+	
+	<select id="findList" resultType="CustomerInfo" >
+		SELECT 
+			<include refid="customerInfoColumns"/>
+		FROM customer_info a
+		<include refid="customerInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="beginCreateDate != null and endCreateDate != null and beginCreateDate != '' and endCreateDate != ''">
+				AND a.create_date BETWEEN #{beginCreateDate} AND #{endCreateDate}
+			</if>
+			<if test="fisrelate != null and fisrelate != ''">
+				AND a.fisrelate = #{fisrelate}
+			</if>
+			<if test="fusername != null and fusername != ''">
+				AND a.fusername = #{fusername}
+			</if>
+			<if test="beginFlogintime != null and endFlogintime != null and beginFlogintime != '' and endFlogintime != ''">
+				AND a.flogintime BETWEEN #{beginFlogintime} AND #{endFlogintime}
+			</if>
+			<if test="fcellphone != null and fcellphone != ''">
+				AND a.fcellphone = #{fcellphone}
+			</if>
+			<if test="beginFdebt != null and endFdebt != null and beginFdebt != '' and endFdebt != ''">
+				AND a.fdebt BETWEEN #{beginFdebt} AND #{endFdebt}
+			</if>
+			<if test="fsort != null and fsort != ''">
+				AND a.fsort = #{fsort}
+			</if>
+			<if test="fcustomercateid != null and fcustomercateid != ''">
+				AND a.fcustomercateid = #{fcustomercateid}
+			</if>
+			<if test="fstatus != null and fstatus != ''">
+				AND a.fstatus = #{fstatus}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="CustomerInfo" >
+		SELECT 
+			<include refid="customerInfoColumns"/>
+		FROM customer_info a
+		<include refid="customerInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO customer_info(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			fcustomerbasicid,
+			fisrelate,
+			fusername,
+			fpassword,
+			fregisterchannel,
+			flogintime,
+			flogouttime,
+			fphoto,
+			fweixinid,
+			fweixinunionid,
+			fweixinname,
+			fregion,
+			fsex,
+			fticket,
+			flinkman,
+			fcellphone,
+			femail,
+			fphone,
+			ffax,
+			fbankaccount,
+			fbankaccountnum,
+			fbank,
+			fbankaccountname,
+			fbankaccountpersonid,
+			fbankphone,
+			faddress,
+			fdiscount,
+			fshipmenttype,
+			fpaytype,
+			fdebt,
+			fsort,
+			fcustomercateid,
+			fstatus,
+			fcatename
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{fcustomerbasicid},
+			#{fisrelate},
+			#{fusername},
+			#{fpassword},
+			#{fregisterchannel},
+			#{flogintime},
+			#{flogouttime},
+			#{fphoto},
+			#{fweixinid},
+			#{fweixinunionid},
+			#{fweixinname},
+			#{fregion},
+			#{fsex},
+			#{fticket},
+			#{flinkman},
+			#{fcellphone},
+			#{femail},
+			#{fphone},
+			#{ffax},
+			#{fbankaccount},
+			#{fbankaccountnum},
+			#{fbank},
+			#{fbankaccountname},
+			#{fbankaccountpersonid},
+			#{fbankphone},
+			#{faddress},
+			#{fdiscount},
+			#{fshipmenttype},
+			#{fpaytype},
+			#{fdebt},
+			#{fsort},
+			#{fcustomercateid},
+			#{fstatus},
+			#{fcatename}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE customer_info SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			fcustomerbasicid = #{fcustomerbasicid},
+			fisrelate = #{fisrelate},
+			fusername = #{fusername},
+			fpassword = #{fpassword},
+			fregisterchannel = #{fregisterchannel},
+			flogintime = #{flogintime},
+			flogouttime = #{flogouttime},
+			fphoto = #{fphoto},
+			fweixinid = #{fweixinid},
+			fweixinunionid = #{fweixinunionid},
+			fweixinname = #{fweixinname},
+			fregion = #{fregion},
+			fsex = #{fsex},
+			fticket = #{fticket},
+			flinkman = #{flinkman},
+			fcellphone = #{fcellphone},
+			femail = #{femail},
+			fphone = #{fphone},
+			ffax = #{ffax},
+			fbankaccount = #{fbankaccount},
+			fbankaccountnum = #{fbankaccountnum},
+			fbank = #{fbank},
+			fbankaccountname = #{fbankaccountname},
+			fbankaccountpersonid = #{fbankaccountpersonid},
+			fbankphone = #{fbankphone},
+			faddress = #{faddress},
+			fdiscount = #{fdiscount},
+			fshipmenttype = #{fshipmenttype},
+			fpaytype = #{fpaytype},
+			fdebt = #{fdebt},
+			fsort = #{fsort},
+			fcustomercateid = #{fcustomercateid},
+			fstatus = #{fstatus},
+			fcatename = #{fcatename}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM customer_info
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE customer_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="CustomerInfo" statementType="STATEMENT">
+		select * FROM customer_info  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

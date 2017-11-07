@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.goods.dao.brand.BrandDao">
+    
+	<sql id="brandColumns">
+		a.id AS "id",
+		a.fbrandname AS "fbrandname",
+		a.del_flag AS "delFlag",
+		a.fsort AS "fsort",
+		a.create_by AS "createBy.id",
+		a.fsponsorid AS "company.id",
+		a.create_date AS "createDate",
+		a.update_date AS "updateDate",
+		a.remarks AS "description",
+		a.update_by AS "updateBy.id",
+		a.fstatus AS "fstatus",
+		c.name AS "company.name",
+    	c.parent_id AS "company.parent.id",
+    	c.parent_ids AS "company.parentIds",
+		o.name AS "office.name",
+    	o.parent_id AS "office.parent.id",
+    	o.parent_ids AS "office.parentIds"
+	</sql>
+	
+	<sql id="brandJoins">
+	 LEFT JOIN warehouse fsponsor ON fsponsor.id = a.fsponsorid
+	 LEFT JOIN sys_user createby ON createby.id = a.create_by
+	 LEFT JOIN  sys_office c ON c.id = a.fsponsorid
+	 LEFT JOIN  sys_office o ON o.id = a.office_id 
+	</sql>
+	
+    
+	<select id="get" resultType="Brand" >
+		SELECT 
+			<include refid="brandColumns"/>
+		FROM goods_brand a
+		<include refid="brandJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="Brand" >
+		SELECT 
+			<include refid="brandColumns"/>
+		FROM goods_brand a
+		<include refid="brandJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fbrandname != null and fbrandname != ''">
+				AND a.fbrandname LIKE 
+					<if test="dbName == 'oracle'">'%'||#{fbrandname}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{fbrandname}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{fbrandname},'%')</if>
+			</if>
+			<if test="fsort != null and fsort != ''">
+				AND a.fsort = #{fsort}
+			</if>
+			<if test="createBy != null and createBy.id != null and createBy.id != ''">
+				AND a.create_by = #{createBy.id}
+			</if>
+			<if test="fsponsorId != null and fsponsorId != ''">
+				AND a.fsponsorid = #{fsponsorId.id}
+			</if>
+			<if test="fstatus != null and fstatus != ''">
+				AND a.fstatus = #{fstatus}
+			</if>
+			<!-- 数据范围过滤 -->
+				${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Brand" >
+		SELECT 
+			<include refid="brandColumns"/>
+		FROM goods_brand a
+		<include refid="brandJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO goods_brand(
+			id,
+			fbrandname,
+			del_flag,
+			fsort,
+			create_by,
+			fsponsorid,
+			create_date,
+			update_date,
+			remarks,
+			update_by,
+			fstatus
+		) VALUES (
+			#{id},
+			#{fbrandname},
+			#{delFlag},
+			#{fsort},
+			#{createBy.id},
+			#{fsponsorId.id},
+			#{createDate},
+			#{updateDate},
+			#{description},
+			#{updateBy.id},
+			#{fstatus}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE goods_brand SET 	
+			fbrandname = #{fbrandname},
+			fsort = #{fsort},
+			update_date = #{updateDate},
+			remarks = #{description},
+			update_by = #{updateBy.id},
+			fstatus = #{fstatus}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM goods_brand
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE goods_brand SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Brand" statementType="STATEMENT">
+		select * FROM goods_brand  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

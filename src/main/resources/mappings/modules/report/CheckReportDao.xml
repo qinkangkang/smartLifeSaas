@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.report.dao.CheckReportDao">
+    
+	<sql id="warehouseCheckGoodsColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.fgoods_spu AS "goodsSpu.id",
+		a.fgoods_sku AS "goodsSku.id",
+		a.fwarehouse_checkorder AS "checkOrder.id",
+		a.fchecknum AS "checkNum",
+		a.fcheckbefore AS "checkBeforeNum",
+		a.fprofitlossnum AS "profitLossNum",
+		a.fprofitlossmoney AS "profitLossMoney",
+		b.fcheck_order AS "checkOrder.fcheckOrder",
+		b.fcheck_date AS "checkOrder.checkDate",
+		c.fname AS "checkOrder.warehouse.fname",
+		goodsSpu.fgoodsname AS "goodsSpu.fgoodsname",
+		goodsSpu.funit_id AS "goodsSpu.goodsUnit.id",
+		goodsSku.fgoodsnumber AS "goodsSku.fgoodsnumber",
+		goodsSku.fbarcode AS "goodsSku.fbarcode",
+		category.name AS "goodsSpu.categorys.name",
+		brand.fbrandname AS "goodsSpu.brand.fbrandname",
+		unit.funitname AS "goodsSpu.goodsUnit.funitname",
+		updatebyb.name AS "checkOrder.updateBy.name"
+	</sql>
+	<sql id="warehouseCheckGoodsJoins">
+		LEFT JOIN warehouse_checkorder b ON b.id = a.fwarehouse_checkorder
+		LEFT JOIN warehouse c ON c.id = b.fwarehouse_by
+		LEFT JOIN goods_spu goodsSpu ON goodsSpu.id = a.fgoods_spu
+		LEFT JOIN goods_sku goodsSku ON goodsSku.id = a.fgoods_sku
+		LEFT JOIN goods_category category ON category.id = goodsSpu.fcategorys_id
+		LEFT JOIN goods_brand brand ON brand.id = goodsSpu.brand_id
+		LEFT JOIN goods_unit unit ON unit.id = goodsSpu.funit_id
+		LEFT JOIN sys_user updatebyb ON updatebyb.id = b.create_by
+	</sql>
+	
+    
+	<select id="get" resultType="WarehouseCheckGoods" >
+		SELECT 
+			<include refid="warehouseCheckGoodsColumns"/>
+		FROM warehouse_checkorder_goods a
+		<include refid="warehouseCheckGoodsJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="WarehouseCheckGoods" >
+		SELECT 
+			<include refid="warehouseCheckGoodsColumns"/>
+		FROM warehouse_checkorder_goods a
+		<include refid="warehouseCheckGoodsJoins"/>
+		<where>
+			b.del_flag = #{DEL_FLAG_NORMAL} AND
+			b.fstatus = 1
+			<if test="goodsSku != null and goodsSku.id != null and goodsSku.id != ''">
+				AND a.fgoods_sku LIKE 
+					<if test="dbName == 'oracle'">'%'||#{goodsSku.id}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{goodsSku.id}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{goodsSku.id},'%')</if>
+			</if>
+			<if test="checkOrder != null and checkOrder.id != null and checkOrder.id != ''">
+				AND a.fwarehouse_checkorder = #{checkOrder.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="WarehouseCheckGoods" >
+		SELECT 
+			<include refid="warehouseCheckGoodsColumns"/>
+		FROM warehouse_checkorder_goods a
+		<include refid="warehouseCheckGoodsJoins"/>
+		<where>
+			b.del_flag = #{DEL_FLAG_NORMAL} AND
+			b.fstatus = 1
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO warehouse_checkorder_goods(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			fgoods_spu,
+			fgoods_sku,
+			fwarehouse_checkorder,
+			fchecknum,
+			fcheckbefore,
+			fprofitlossnum,
+			fprofitlossmoney
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{goodsSpu.id},
+			#{goodsSku.id},
+			#{checkOrder.id},
+			#{checkNum},
+			#{checkBeforeNum},
+			#{profitLossNum},
+			#{profitLossMoney}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE warehouse_checkorder_goods SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			fgoods_spu = #{goodsSpu.id},
+			fgoods_sku = #{goodsSku.id},
+			fwarehouse_checkorder = #{checkOrder.id},
+			fchecknum = #{checkNum},
+			fcheckbefore = #{checkBeforeNum},
+			fprofitlossnum = #{profitLossNum},
+			fprofitlossmoney = #{profitLossMoney}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM warehouse_checkorder_goods
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE fwarehouse_checkorder = #{checkOrder.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE warehouse_checkorder_goods SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE fwarehouse_checkorder = #{checkOrder.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="WarehouseCheckGoods" statementType="STATEMENT">
+		select * FROM warehouse_checkorder_goods  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="getCheckGoodsNum" resultType="int" >
+		SELECT sum(a.fchecknum)
+		FROM warehouse_checkorder_goods a
+		<include refid="warehouseCheckGoodsJoins"/>
+		<where>
+			b.del_flag = #{DEL_FLAG_NORMAL} AND
+			b.fstatus = 1
+			<if test="goodsSku != null and goodsSku.id != null and goodsSku.id != ''">
+				AND a.fgoods_sku LIKE 
+					<if test="dbName == 'oracle'">'%'||#{goodsSku.id}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{goodsSku.id}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{goodsSku.id},'%')</if>
+			</if>
+			<if test="checkOrder != null and checkOrder.id != null and checkOrder.id != ''">
+				AND a.fwarehouse_checkorder = #{checkOrder.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	<select id="getCheckWarehouseNum" resultType="int" >
+		SELECT COUNT(DISTINCT b.fwarehouse_by) 
+		FROM warehouse_checkorder_goods a
+		<include refid="warehouseCheckGoodsJoins"/>
+		<where>
+			b.del_flag = #{DEL_FLAG_NORMAL} AND
+			b.fstatus = 1
+			<if test="goodsSku != null and goodsSku.id != null and goodsSku.id != ''">
+				AND a.fgoods_sku LIKE 
+					<if test="dbName == 'oracle'">'%'||#{goodsSku.id}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{goodsSku.id}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{goodsSku.id},'%')</if>
+			</if>
+			<if test="checkOrder != null and checkOrder.id != null and checkOrder.id != ''">
+				AND a.fwarehouse_checkorder = #{checkOrder.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	<select id="getCheckProfitAndLossNum" resultType="int" >
+		SELECT sum(a.fprofitlossnum) 
+		FROM warehouse_checkorder_goods a
+		<include refid="warehouseCheckGoodsJoins"/>
+		<where>
+			b.del_flag = #{DEL_FLAG_NORMAL} AND
+			b.fstatus = 1
+			<if test="goodsSku != null and goodsSku.id != null and goodsSku.id != ''">
+				AND a.fgoods_sku LIKE 
+					<if test="dbName == 'oracle'">'%'||#{goodsSku.id}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{goodsSku.id}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{goodsSku.id},'%')</if>
+			</if>
+			<if test="checkOrder != null and checkOrder.id != null and checkOrder.id != ''">
+				AND a.fwarehouse_checkorder = #{checkOrder.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	<!--  -->
+	<select id="getCheckProfitAndLossMoney" resultType="double" >
+		SELECT sum(a.fprofitlossmoney) 
+		FROM warehouse_checkorder_goods a
+		<include refid="warehouseCheckGoodsJoins"/>
+		<where>
+			b.del_flag = #{DEL_FLAG_NORMAL} AND
+			b.fstatus = 1
+			<if test="goodsSku != null and goodsSku.id != null and goodsSku.id != ''">
+				AND a.fgoods_sku LIKE 
+					<if test="dbName == 'oracle'">'%'||#{goodsSku.id}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{goodsSku.id}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{goodsSku.id},'%')</if>
+			</if>
+			<if test="checkOrder != null and checkOrder.id != null and checkOrder.id != ''">
+				AND a.fwarehouse_checkorder = #{checkOrder.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	
+</mapper>

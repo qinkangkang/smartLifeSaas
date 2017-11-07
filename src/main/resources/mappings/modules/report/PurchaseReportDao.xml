@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.report.dao.PurchaseReportDao">
+    	
+	<sql id="orderProDetailColumns">
+		a.id AS "id",
+		a.forderprocurementid AS "forderprocurement.id",
+		a.fspuid AS "fspu.id",
+		a.fskuid AS "fsku.id",
+		a.fgoodsnum AS "fgoodsnum",
+		a.fgoodsprice AS "fgoodsprice",
+		a.fgoodsdiscount AS "fgoodsdiscount",
+		a.fdiscountprice AS "fdiscountprice",
+		a.fcountmoney AS "fcountmoney",
+		a.fdiscountcountmoney AS "fdiscountcountmoney",
+		a.fstatus AS "fstatus",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.fwarehousegoodsinfoid AS "fwarehouseGoodsInfo.id",
+		a.freturnnum AS "freturnnum",
+		a.fsupplierid AS "fsupplier.id",
+		b.fordernum AS "forderprocurement.fordernum",
+		b.fexecutor AS "forderprocurement.fexecutor.id",
+		b.fordercountprice AS "forderprocurement.fordercountprice",
+		b.factualpayment AS "forderprocurement.factualpayment",
+		b.fendtime AS "forderprocurement.fendtime",
+		b.remarks AS "forderprocurement.remarks",
+		c.name AS "forderprocurement.fexecutor.name",
+		d.fname AS "fsupplier.fname",
+		e.id AS "forderprocurement.fwarehose.id",
+		e.fname AS "forderprocurement.fwarehose.fname",
+		f.id AS "forderprocurement.fdclearingaccountid.id",
+		f.faccountname AS "forderprocurement.fdclearingaccountid.faccountname",
+		fspu.fgoodsname AS "fspu.fgoodsname",
+		fsku.fbarcode AS "fsku.fbarcode",
+		fsku.fgoodsnumber AS "fsku.fgoodsnumber",
+		fsku.fcolor_id AS "fsku.color.id",
+		fsku.fsize_id AS "fsku.size.id",
+		fsku.remarks AS "fsku.remarks",
+		brand.fbrandname AS "fspu.brand.fbrandname",
+		unit.funitname AS "fspu.goodsUnit.funitname",
+		category.name AS "fspu.categorys.name"
+		
+
+	</sql>
+	
+	<sql id="orderProDetailJoins">
+		LEFT JOIN order_procurement b ON b.id = a.forderprocurementid
+		LEFT JOIN sys_user c ON c.id = b.fexecutor
+		LEFT JOIN supplier_basic d ON d.id = a.fsupplierid
+		LEFT JOIN warehouse e ON e.id = b.fwarehoseid
+		LEFT JOIN fd_clearing_account f ON f.id = b.fdclearingaccountid
+		LEFT JOIN goods_spu fspu ON fspu.id = a.fspuid
+		LEFT JOIN goods_sku fsku ON fsku.id = a.fskuid
+		LEFT JOIN goods_brand brand ON brand.id = fspu.brand_id
+		LEFT JOIN goods_unit unit ON unit.id = fspu.funit_id
+		LEFT JOIN goods_category category ON category.id = fspu.fcategorys_id
+		LEFT JOIN sys_user createby ON createby.id = a.create_by	
+	</sql>
+	
+	
+	<select id="findOrderProDetailList" resultType="OrderProDetail" >
+		SELECT 
+			
+			<include refid="orderProDetailColumns"/>
+		FROM order_procurement_detail a
+		<include refid="orderProDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND b.fstatus = 6
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	<select id="getPurGoodsNum" resultType="int" >
+		SELECT sum(a.fgoodsnum) 
+		FROM order_procurement_detail a
+		<include refid="orderProDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND b.fstatus = 6
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getPurOrderNum" resultType="int" >
+		SELECT COUNT(DISTINCT a.forderprocurementid) 
+		FROM order_procurement_detail a
+		<include refid="orderProDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND b.fstatus = 6
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	<select id="getPurAmountOfMoney" resultType="double" >
+		SELECT sum(a.fdiscountcountmoney) 
+		FROM order_procurement_detail a
+		<include refid="orderProDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND b.fstatus = 6
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	<select id="getOrderProDetailById" resultType="OrderProDetail" >
+		SELECT 
+			<include refid="orderProDetailColumns"/>
+		FROM order_procurement_detail a
+		<include refid="orderProDetailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<sql id="orderProChaDetailColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.fspuid AS "fspu.id",
+		a.fskuid AS "fsku.id",
+		a.fgoodsnum AS "fgoodsnum",
+		a.fgoodsprice AS "fgoodsprice",
+		a.fdiscount AS "fdiscount",
+		a.fdiscountprice AS "fdiscountPrice",
+		a.fcountprice AS "fcountprice",
+		a.fdiscountcountprice AS "fdiscountcountprice",
+		a.fstatus AS "fstatus",
+		a.fprocurementid AS "fprocurement.id",
+		a.fprocurementchargebackid AS "fprocurementchargeback.id",
+		a.fwarehousegoodsinfoid AS "fwarehouseGoodsInfo.id",
+		b.fordernum AS "fprocurementchargeback.fordernum",
+		b.fexecutor AS "fprocurementchargeback.fexecutor.id",
+		b.fordercountprice AS "fprocurementchargeback.fordercountprice",
+		b.factualpayment AS "fprocurementchargeback.factualpayment",
+		b.fendtime AS "fprocurementchargeback.fendtime",
+		b.remarks AS "fprocurementchargeback.remarks",
+		c.name AS "fprocurementchargeback.fexecutor.name",
+		d.id AS "fprocurementchargeback.fsupplier.id",
+		d.fname AS "fprocurementchargeback.fsupplier.fname",
+		e.id AS "fprocurementchargeback.fwarehose.id",
+		e.fname AS "fprocurementchargeback.fwarehose.fname",
+		f.id AS "fprocurementchargeback.fdclearingaccount.id",
+		f.faccountname AS "fprocurementchargeback.fdclearingaccount.faccountname",
+		unit.funitname AS "fspu.goodsUnit.funitname",
+		fspu.fgoodsname AS "fspu.fgoodsname",
+		fspu.funit_id AS "fspu.funit_id",
+		fsku.fbarcode AS "fsku.fbarcode",
+		fsku.fgoodsnumber AS "fsku.fgoodsnumber",
+		fsku.fcolor_id AS "fsku.color.id",
+		fsku.fsize_id AS "fsku.size.id",
+		fsku.remarks AS "fsku.remarks",
+		brand.fbrandname AS "fspu.brand.fbrandname",
+		unit.funitname AS "fspu.brand.funitname",
+		category.name AS "fspu.categorys.name" 
+	</sql>
+	
+	<sql id="orderProChaDetailJoins">
+		LEFT JOIN order_procurement_chargeback b ON b.id = a.fprocurementchargebackid
+		LEFT JOIN sys_user c ON c.id = b.fexecutor
+		LEFT JOIN supplier_basic d ON d.id = b.fsupplierid
+		LEFT JOIN warehouse e ON e.id = b.fwarehoseid
+		LEFT JOIN fd_clearing_account f ON f.id = b.fdclearingaccountid
+		LEFT JOIN goods_spu fspu ON fspu.id = a.fspuid
+		LEFT JOIN goods_sku fsku ON fsku.id = a.fskuid
+		LEFT JOIN goods_brand brand ON brand.id = fspu.brand_id
+		LEFT JOIN goods_unit unit ON unit.id = fspu.funit_id
+		LEFT JOIN goods_category category ON category.id = fspu.fcategorys_id
+		LEFT JOIN sys_user createby ON createby.id = a.create_by
+	</sql>
+	
+	<!-- #{fprocurementchargeback.STATUS_END} -->
+	<select id="findOrderProChargebackList" resultType="OrderProChaDetail" >
+		SELECT 
+			<include refid="orderProChaDetailColumns"/>
+		FROM order_procurement_chargeback_detail a
+		<include refid="orderProChaDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND b.fstatus = 6
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	<select id="getOrderProChaDetailById" resultType="OrderProChaDetail" >
+		SELECT 
+			<include refid="orderProChaDetailColumns"/>
+		FROM order_procurement_chargeback_detail a
+		<include refid="orderProChaDetailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	<select id="getPurBackGoodsNum" resultType="int" >
+		SELECT sum(a.fgoodsnum)
+		FROM order_procurement_chargeback_detail a
+		<include refid="orderProChaDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND b.fstatus = 6
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="getPurBackOrderNum" resultType="int" >
+		SELECT COUNT(DISTINCT a.fprocurementchargebackid)
+		FROM order_procurement_chargeback_detail a
+		<include refid="orderProChaDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND b.fstatus = 6
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="getPurBackAmountOfMoney" resultType="double" >
+		SELECT sum(a.fdiscountcountprice)
+		FROM order_procurement_chargeback_detail a
+		<include refid="orderProChaDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND b.fstatus = 6
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+	
+</mapper>

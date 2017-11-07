@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.order.dao.procurement.OrderProDetailDao">
+    
+	<sql id="orderProDetailColumns">
+		a.id AS "id",
+		a.forderprocurementid AS "forderprocurement.id",
+		a.fspuid AS "fspu.id",
+		a.fskuid AS "fsku.id",
+		a.fgoodsnum AS "fgoodsnum",
+		a.fgoodsprice AS "fgoodsprice",
+		a.fgoodsdiscount AS "fgoodsdiscount",
+		a.fdiscountprice AS "fdiscountprice",
+		a.fcountmoney AS "fcountmoney",
+		a.fdiscountcountmoney AS "fdiscountcountmoney",
+		a.fstatus AS "fstatus",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.fwarehousegoodsinfoid AS "fwarehouseGoodsInfo.id",
+		a.freturnnum AS "freturnnum",
+		fwarehouseGoodsInfo.finventory AS "fwarehouseGoodsInfo.finventory",
+		fspu.fgoodsname AS "fspu.fgoodsname",
+		fsku.fgoodsnumber AS "fsku.fgoodsnumber",
+		fsku.fcolor_id AS "fsku.color.id",
+		fsku.fsize_id AS "fsku.size.id",
+		<!--  -->
+		color.fcolorname AS "fsku.color.fcolorname",
+		size.fsizename AS "fsku.size.fsizename",
+		brand.fbrandname AS "fspu.brand.fbrandname",
+		unit.funitname AS "fspu.brand.funitname",
+		category.name AS "fspu.categorys.name",
+		fsupplier.fname AS "fsupplier.fname",
+		a.fsupplierid AS "fsupplier.id",
+		b.fordernum AS "forderprocurement.fordernum"
+	</sql>
+	
+	<sql id="orderProDetailJoins">
+		LEFT JOIN order_procurement b ON b.id = a.forderprocurementid
+		LEFT JOIN order_procurement forderprocurement ON forderprocurement.id = a.forderprocurementid
+		LEFT JOIN goods_spu fspu ON fspu.id = a.fspuid
+		LEFT JOIN goods_sku fsku ON fsku.id = a.fskuid
+		LEFT JOIN warehouse_goods_info fwarehouseGoodsInfo ON fwarehouseGoodsInfo.id = a.fwarehousegoodsinfoid
+		<!--  -->
+		LEFT JOIN goods_color color ON color.id = fsku.fcolor_id
+		LEFT JOIN goods_size size ON size.id = fsku.fsize_id
+		LEFT JOIN goods_brand brand ON brand.id = fspu.brand_id
+		LEFT JOIN goods_unit unit ON unit.id = fspu.brand_id
+		LEFT JOIN goods_category category ON category.id = fspu.fcategorys_id
+		LEFT JOIN supplier_basic fsupplier ON fsupplier.id = a.fsupplierid
+		LEFT JOIN sys_user createby ON createby.id = a.create_by
+		
+	</sql>
+	
+    
+	<select id="get" resultType="OrderProDetail" >
+		SELECT 
+			<include refid="orderProDetailColumns"/>
+		FROM order_procurement_detail a
+		<include refid="orderProDetailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="OrderProDetail" >
+		SELECT 
+			<include refid="orderProDetailColumns"/>
+		FROM order_procurement_detail a
+		<include refid="orderProDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="forderprocurement != null and forderprocurement.id != null and forderprocurement.id != ''">
+				AND a.forderprocurementid = #{forderprocurement.id}
+			</if>
+			
+			<if test="fsupplier != null and fsupplier.id != null and fsupplier.id != ''">
+				AND a.fsupplierid = #{fsupplier.id}
+			</if>
+
+			<if test="beginCreateDate != null and endCreateDate != null and beginCreateDate != '' and endCreateDate != ''">
+				AND a.create_date BETWEEN #{beginCreateDate} AND #{endCreateDate}
+			</if>
+			<if test="fstatus != null and fstatus !='' and fstatus > 0">
+				AND a.fstatus = #{fstatus}
+			</if>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="OrderProDetail" >
+		SELECT 
+			<include refid="orderProDetailColumns"/>
+		FROM order_procurement_detail a
+		<include refid="orderProDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO order_procurement_detail(
+			id,
+			forderprocurementid,
+			fspuid,
+			fskuid,
+			fgoodsnum,
+			fgoodsprice,
+			fgoodsdiscount,
+			fdiscountprice,
+			fcountmoney,
+			fdiscountcountmoney,
+			fstatus,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			fwarehousegoodsinfoid,
+			freturnnum,
+			fsupplierid
+		) VALUES (
+			#{id},
+			#{forderprocurement.id},
+			#{fspu.id},
+			#{fsku.id},
+			#{fgoodsnum},
+			#{fgoodsprice},
+			#{fgoodsdiscount},
+			#{fdiscountprice},
+			#{fcountmoney},
+			#{fdiscountcountmoney},
+			#{fstatus},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{fwarehouseGoodsInfo.id},
+			#{freturnnum},
+			#{fsupplier.id}
+			
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE order_procurement_detail SET 	
+			forderprocurementid = #{forderprocurement.id},
+			fspuid = #{fspu.id},
+			fskuid = #{fsku.id},
+			fgoodsnum = #{fgoodsnum},
+			fgoodsprice = #{fgoodsprice},
+			fgoodsdiscount = #{fgoodsdiscount},
+			fdiscountprice = #{fdiscountprice},
+			fcountmoney = #{fcountmoney},
+			fdiscountcountmoney = #{fdiscountcountmoney},
+			fstatus = #{fstatus},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			fwarehousegoodsinfoid = #{fwarehouseGoodsInfo.id},
+			freturnnum =#{freturnnum},
+			fsupplierid=#{fsupplier.id}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM order_procurement_detail
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE forderprocurementid = #{forderprocurement.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE order_procurement_detail SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE forderprocurementid = #{forderprocurement.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="OrderProDetail" statementType="STATEMENT">
+		select * FROM order_procurement_detail  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListByforderprocurement" resultType="OrderProcurement">
+		SELECT 
+			*
+		FROM order_procurement a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fordernum != null and fordernum != ''">
+				AND a.fordernum LIKE 
+				<if test="dbName == 'oracle'">#{fordernum}||'%'</if>
+				<if test="dbName == 'mssql'">#{fordernum}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fordernum},'%')</if>
+			</if>
+			 
+			<if test="fstatus != null and fstatus > 0">
+				AND	a.fstatus = #{fstatus}
+				
+			</if>	
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf} 
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByfspu" resultType="GoodsSpu">
+		SELECT 
+			*
+		FROM goods_spu a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fgoodsname != null and fgoodsname != ''">
+				AND a.fgoodsname LIKE 
+				<if test="dbName == 'oracle'">#{fgoodsname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fgoodsname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fgoodsname},'%')</if>
+			</if>
+			<!-- 数据范围过滤
+			${sqlMap.dsf} 
+			 -->
+			AND a.fstatus != '2' OR a.fstatus is null
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findBySupplier" resultType="SupplierBasic">
+		SELECT 
+			*
+		FROM supplier_basic a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+				<if test="dbName == 'oracle'">#{fname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fname},'%')</if>
+			</if>
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf} 
+			AND a.fstatus != 2 OR a.fstatus is null
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findByWarehouse" resultType="Warehouse">
+		SELECT 
+			*
+		FROM warehouse a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+				<if test="dbName == 'oracle'">#{fname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fname},'%')</if>
+			</if>
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf} 
+			AND a.fstatus = '1'
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findListByfsku" resultType="GoodsSku">
+		SELECT 
+			*
+		FROM goods_sku a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fgoodsnumber != null and fgoodsnumber != ''">
+				AND a.fgoodsnumber LIKE 
+				<if test="dbName == 'oracle'">#{fgoodsnumber}||'%'</if>
+				<if test="dbName == 'mssql'">#{fgoodsnumber}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fgoodsnumber},'%')</if>
+			</if>
+			<if test="goodsSpu != null and goodsSpu != ''">
+				AND a.fspuid = #{goodsSpu.id}
+			</if>
+			<if test="colors != null and colors != ''">
+				AND a.fcolor_id = #{colors.id}
+			</if>
+			<if test="size != null and size != ''">
+				AND a.fsize_id = #{size.id}
+			</if>
+			<!-- 数据范围过滤${sqlMap.dsf} -->
+			 
+			AND a.fstatus != '2' OR a.fstatus is null
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findListBycolors" resultType="Colors">
+		SELECT 
+			*
+		FROM goods_color a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fcolorname != null and fcolorname != ''">
+				AND a.fcolorname LIKE 
+				<if test="dbName == 'oracle'">#{fcolorname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fcolorname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fcolorname},'%')</if>
+			</if>
+			<!-- 数据范围过滤 ${sqlMap.dsf} -->
+			
+			AND a.fstatus != '2' OR a.fstatus is null
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+
+	<select id="findListBysize" resultType="Size">
+		SELECT 
+			*
+		FROM goods_size a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fsizename != null and fsizename != ''">
+				AND a.fsizename LIKE 
+				<if test="dbName == 'oracle'">#{fsizename}||'%'</if>
+				<if test="dbName == 'mssql'">#{fsizename}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fsizename},'%')</if>
+			</if>
+			<!-- 数据范围过滤${sqlMap.dsf}  -->
+			
+			AND a.fstatus != '2' OR a.fstatus is null
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	
+</mapper>

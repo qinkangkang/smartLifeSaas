@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.account.dao.customeraccount.CustomerAccountDao">
+    
+	<sql id="customerAccountColumns">
+		a.id AS "id",
+		a.fcustomerid AS "customerBasic.id",
+		a.fcustomeridtype AS "customerCate.id",
+		a.foddnumbers AS "foddNumbers",
+		a.faccounttype AS "accountType.id",
+		a.fclearingaccount AS "clearingAccount.id",
+		a.fbusinesshours AS "fbusinessHours",
+		a.famountreceivable AS "famountReceivable",
+		a.fpaidamount AS "fpaidAmount",
+		a.fresidualamount AS "fresidualAmount",
+		a.fpreferentialamount AS "fpreferentialAmount",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.company_id AS "fsponsor.id",
+		a.office_id AS "fstore.id",
+		fsponsor.name AS "fsponsor.name",
+		fstore.name AS "fstore.name",
+		customerBasic.fname AS "customerBasic.fname",
+		customerCate.fname AS "customerCate.fname",
+		accountType.ftypename AS "accountType.ftypename",
+		clearingAccount.faccountname AS "clearingAccount.faccountname"
+	</sql>
+	
+	<sql id="customerAccountJoins">
+		LEFT JOIN customer_basic customerBasic ON customerBasic.id = a.fcustomerid
+		LEFT JOIN customer_cate customerCate ON customerCate.id = a.fcustomeridtype
+		LEFT JOIN fd_account_type accountType ON accountType.id = a.faccounttype
+		LEFT JOIN fd_clearing_account clearingAccount ON clearingAccount.id = a.fclearingaccount
+		LEFT JOIN sys_office fsponsor ON fsponsor.id = a.company_id
+		LEFT JOIN sys_office fstore ON fstore.id = a.office_id
+	</sql>
+	
+    
+	<select id="get" resultType="CustomerAccount" >
+		SELECT 
+			<include refid="customerAccountColumns"/>
+		FROM fd_customer_account a
+		<include refid="customerAccountJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="CustomerAccount" >
+		SELECT 
+			<include refid="customerAccountColumns"/>
+		FROM fd_customer_account a
+		<include refid="customerAccountJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="customerBasic != null and customerBasic.id != null and customerBasic.id != ''">
+				AND a.fcustomerid = #{customerBasic.id}
+			</if>
+			<if test="customerCate != null and customerCate.id != null and customerCate.id != ''">
+				AND a.fcustomeridtype = #{customerCate.id}
+			</if>
+			<if test="accountType != null and accountType.id != null and accountType.id != ''">
+				AND a.faccounttype = #{accountType.id}
+			</if>
+			<if test="clearingAccount != null and clearingAccount.id != null and clearingAccount.id != ''">
+				AND a.fclearingaccount = #{clearingAccount.id}
+			</if>
+			<if test="beginCreateDate != null and endCreateDate != null and beginCreateDate != '' and endCreateDate != ''">
+				AND a.create_date BETWEEN #{beginCreateDate} AND #{endCreateDate}
+			</if>
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="CustomerAccount" >
+		SELECT 
+			<include refid="customerAccountColumns"/>
+		FROM fd_customer_account a
+		<include refid="customerAccountJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO fd_customer_account(
+			id,
+			fcustomerid,
+			fcustomeridtype,
+			foddnumbers,
+			faccounttype,
+			fclearingaccount,
+			fbusinesshours,
+			famountreceivable,
+			fpaidamount,
+			fresidualamount,
+			fpreferentialamount,
+			company_id,
+			office_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{customerBasic.id},
+			#{customerCate.id},
+			#{foddNumbers},
+			#{accountType.id},
+			#{clearingAccount.id},
+			#{fbusinessHours},
+			#{famountReceivable},
+			#{fpaidAmount},
+			#{fresidualAmount},
+			#{fpreferentialAmount},
+			#{fsponsor.id},
+			#{fstore.id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE fd_customer_account SET 	
+			fcustomerid = #{customerBasic.id},
+			fcustomeridtype = #{customerCate.id},
+			foddnumbers = #{foddNumbers},
+			faccounttype = #{accountType.id},
+			fclearingaccount = #{clearingAccount.id},
+			fbusinesshours = #{fbusinessHours},
+			famountreceivable = #{famountReceivable},
+			fpaidamount = #{fpaidAmount},
+			fresidualamount = #{fresidualAmount},
+			fpreferentialamount = #{fpreferentialAmount},
+			company_id = #{fsponsor.id},
+			office_id = #{fstore.id},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM fd_customer_account
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE fd_customer_account SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="CustomerAccount" statementType="STATEMENT">
+		select * FROM fd_customer_account  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListBycustomerBasic" resultType="CustomerBasic">
+		SELECT 
+			*
+		FROM customer_basic a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+				<if test="dbName == 'oracle'">#{fname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fname},'%')</if>
+			</if>
+			AND a.fstatus = 1
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListBycustomerCate" resultType="CustomerCate">
+		SELECT 
+			*
+		FROM customer_cate a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+				<if test="dbName == 'oracle'">#{fname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fname},'%')</if>
+			</if>
+			AND a.fstatus = 1
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByaccountType" resultType="AccountType">
+		SELECT 
+			*
+		FROM fd_account_type a
+		<where>
+			a.delFlag = #{DEL_FLAG_NORMAL}
+			<if test="ftypename != null and ftypename != ''">
+				AND a.ftypename LIKE 
+				<if test="dbName == 'oracle'">#{ftypename}||'%'</if>
+				<if test="dbName == 'mssql'">#{ftypename}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{ftypename},'%')</if>
+			</if>
+			AND a.fstatus = 1
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.updateDate DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListByclearingAccount" resultType="ClearingAccount">
+		SELECT 
+			*
+		FROM fd_clearing_account a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="faccountname != null and faccountname != ''">
+				AND a.faccountname LIKE 
+				<if test="dbName == 'oracle'">#{faccountname}||'%'</if>
+				<if test="dbName == 'mssql'">#{faccountname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{faccountname},'%')</if>
+			</if>
+			AND a.fstatus = 1
+			<!-- 数据范围过滤 -->
+			${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.warehouses.dao.WarehouseRecordDao">
+    
+	<sql id="warehouseRecordColumns">
+	
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.fwarehouse_by AS "warehouse.id",
+		a.fgoods_spu AS "goodsSpu.id",
+		a.fgoods_sku AS "goodsSku.id",
+		a.fbusinesstime AS "businessTime",
+		a.fbusinesstype AS "businessType",
+		a.fbusinessordernumber AS "businessorderNumber",
+		a.fchangenum AS "changeNum",
+		a.fremainingnum AS "remainingNum",
+		a.company_id AS "company.id",
+		a.office_id AS "office.id",
+		warehouse.fname AS "warehouse.fname",
+		goodsSpu.fgoodsname AS "goodsSpu.fgoodsname",
+		goodsSku.fgoodsnumber AS "goodsSku.fgoodsnumber",
+		c.name AS "company.name",
+    	c.parent_id AS "company.parent.id",
+    	c.parent_ids AS "company.parentIds",
+		o.name AS "office.name",
+    	o.parent_id AS "office.parent.id",
+    	o.parent_ids AS "office.parentIds"	
+	</sql>
+	
+	<sql id="warehouseRecordJoins">
+		LEFT JOIN warehouse warehouse ON warehouse.id = a.fwarehouse_by
+		LEFT JOIN goods_spu goodsSpu ON goodsSpu.id = a.fgoods_spu
+		LEFT JOIN goods_sku goodsSku ON goodsSku.id = a.fgoods_sku
+		LEFT JOIN  sys_office c ON c.id = a.company_id
+		LEFT JOIN  sys_office o ON o.id = a.office_id
+		LEFT JOIN sys_user createby ON createby.id = a.create_by
+	</sql>
+	
+    
+	<select id="get" resultType="WarehouseRecord" >
+		SELECT 
+			<include refid="warehouseRecordColumns"/>
+		FROM warehouse_record a
+		<include refid="warehouseRecordJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="WarehouseRecord" >
+		SELECT 
+			<include refid="warehouseRecordColumns"/>
+		FROM warehouse_record a
+		<include refid="warehouseRecordJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="warehouse != null and warehouse.id != null and warehouse.id != ''">
+				AND a.fwarehouse_by = #{warehouse.id}
+			</if>
+			<if test="goodsSpu != null and goodsSpu.id != null and goodsSpu.id != ''">
+				AND a.fgoods_spu = #{goodsSpu.id}
+			</if>
+			<if test="beginBusinessTime != null and endBusinessTime != null and beginBusinessTime != '' and endBusinessTime != ''">
+				AND a .fbusinesstime BETWEEN #{beginBusinessTime} AND #{endBusinessTime}
+			</if>
+			<!-- 数据范围过滤 -->
+				${sqlMap.dsf}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="WarehouseRecord" >
+		SELECT 
+			<include refid="warehouseRecordColumns"/>
+		FROM warehouse_record a
+		<include refid="warehouseRecordJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO warehouse_record(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			fwarehouse_by,
+			fgoods_spu,
+			fgoods_sku,
+			fbusinesstime,
+			fbusinesstype,
+			fbusinessordernumber,
+			fchangenum,
+			fremainingnum,
+			company_id,
+			office_id
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{warehouse.id},
+			#{goodsSpu.id},
+			#{goodsSku.id},
+			#{businessTime},
+			#{businessType},
+			#{businessorderNumber},
+			#{changeNum},
+			#{remainingNum},
+			#{company.id},
+			#{office.id}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE warehouse_record SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			fwarehouse_by = #{warehouse.id},
+			fgoods_spu = #{goodsSpu.id},
+			fgoods_sku = #{goodsSku.id},
+			fbusinesstime = #{businessTime},
+			fbusinesstype = #{businessType},
+			fbusinessordernumber = #{businessorderNumber},
+			fchangenum = #{changeNum},
+			fremainingnum = #{remainingNum},
+			company_id = #{company.id},
+			office_id = #{office.id}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM warehouse_record
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE warehouse_record SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="WarehouseRecord" statementType="STATEMENT">
+		select * FROM warehouse_record  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListBywarehouse" resultType="Warehouse">
+		SELECT 
+			*
+		FROM warehouse a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fname != null and fname != ''">
+				AND a.fname LIKE 
+				<if test="dbName == 'oracle'">#{fname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fname},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListBygoodsSpu" resultType="GoodsSpu">
+		SELECT 
+			*
+		FROM goods_spu a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fgoodsname != null and fgoodsname != ''">
+				AND a.fgoodsname LIKE 
+				<if test="dbName == 'oracle'">#{fgoodsname}||'%'</if>
+				<if test="dbName == 'mssql'">#{fgoodsname}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fgoodsname},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListBygoodsSku" resultType="GoodsSku">
+		SELECT 
+			*
+		FROM goods_sku a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="fgoodsnumber != null and fgoodsnumber != ''">
+				AND a.fgoodsnumber LIKE 
+				<if test="dbName == 'oracle'">#{fgoodsnumber}||'%'</if>
+				<if test="dbName == 'mssql'">#{fgoodsnumber}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{fgoodsnumber},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>
